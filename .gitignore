@@ -1,0 +1,28 @@
+# Build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Local editor / agent state
+.opencode/
+PROMPT.md
+.env
+.env.*
+
+# Logs and crash reports
+*.log
+gtw.log
+
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Local cache and secrets (never commit)
+.cache/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
