@@ -1,1 +1,3 @@
-pub fn init() {}
+pub mod db;
+
+pub use db::*;
