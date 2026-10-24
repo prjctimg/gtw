@@ -41,13 +41,12 @@ struct ThemeDef {
 
 fn parse_color(s: &str) -> Color {
     let s = s.trim().trim_start_matches('#');
-    if s.len() == 6 {
-        if let Ok(r) = u8::from_str_radix(&s[0..2], 16)
-            && let Ok(g) = u8::from_str_radix(&s[2..4], 16)
-            && let Ok(b) = u8::from_str_radix(&s[4..6], 16)
-        {
-            return Color::Rgb(r, g, b);
-        }
+    if s.len() == 6
+        && let Ok(r) = u8::from_str_radix(&s[0..2], 16)
+        && let Ok(g) = u8::from_str_radix(&s[2..4], 16)
+        && let Ok(b) = u8::from_str_radix(&s[4..6], 16)
+    {
+        return Color::Rgb(r, g, b);
     }
     Color::White
 }

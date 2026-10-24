@@ -1,13 +1,9 @@
 #[derive(Default)]
-pub struct EffectManager {
-    effects: Vec<()>,
-}
+pub struct EffectManager {}
 
 impl EffectManager {
     pub fn new() -> Self {
-        Self {
-            effects: Vec::new(),
-        }
+        Self {}
     }
 
     pub fn add_startup(&mut self) {}
