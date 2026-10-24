@@ -1,8 +1,6 @@
-use tachyonfx::{Effect, EffectRenderer, fx};
-
 #[derive(Default)]
 pub struct EffectManager {
-    effects: Vec<Effect>,
+    effects: Vec<()>,
 }
 
 impl EffectManager {
@@ -12,12 +10,7 @@ impl EffectManager {
         }
     }
 
-    pub fn add_startup(&mut self) {
-        // Basic fade/slide style effect placeholder
-        let _ = fx::fade_from_fg(std::time::Duration::from_millis(400), 0);
-    }
+    pub fn add_startup(&mut self) {}
 
-    pub fn tick(&mut self, _dt: std::time::Duration) {
-        // Placeholder
-    }
+    pub fn tick(&mut self, _dt: std::time::Duration) {}
 }
