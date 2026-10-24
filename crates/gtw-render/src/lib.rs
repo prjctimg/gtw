@@ -7,3 +7,6 @@ pub use effects::*;
 pub use theme::*;
 pub use ui::*;
 pub use wordmark::*;
+pub mod html;
+
+pub use html::*;
