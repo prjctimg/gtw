@@ -15,10 +15,12 @@ pub struct Config {
     pub keys: KeysConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct GeneralConfig {
+    #[serde(default)]
     pub offline: bool,
+    #[serde(default)]
     pub no_animations: bool,
 }
 
@@ -74,15 +76,6 @@ pub struct EditorConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct KeysConfig {}
-
-impl Default for GeneralConfig {
-    fn default() -> Self {
-        Self {
-            offline: false,
-            no_animations: false,
-        }
-    }
-}
 
 impl Default for NetworkConfig {
     fn default() -> Self {
