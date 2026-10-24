@@ -1,6 +1,7 @@
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
+use ratatui::widgets::Widget;
 use tui_big_text::{BigText, PixelSize};
 
 pub fn render_wordmark(area: Rect, buf: &mut Buffer, color: Color) {
@@ -12,5 +13,5 @@ pub fn render_wordmark(area: Rect, buf: &mut Buffer, color: Color) {
         .style(Style::default().fg(color))
         .lines(vec!["gtw".into()])
         .build();
-    big.render(area, buf);
+    Widget::render(big, area, buf);
 }

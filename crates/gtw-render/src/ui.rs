@@ -2,7 +2,7 @@ use gtw_core::Loadable;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Paragraph, Widget};
 
 pub fn render_skeleton(area: Rect, buf: &mut Buffer) {
     for y in area.y..area.y + area.height.min(6) {
@@ -53,7 +53,7 @@ pub fn render_loadable<T>(
                 height: 1,
                 ..area
             };
-            msg.render(r, buf);
+            Widget::render(msg, r, buf);
         }
         Loadable::Failed {
             previous: None,
@@ -62,11 +62,11 @@ pub fn render_loadable<T>(
         } => {
             let msg = Paragraph::new(format!("Error: {} (r to retry)", error.message))
                 .style(Style::default().fg(Color::Red));
-            msg.render(area, buf);
+            Widget::render(msg, area, buf);
         }
         Loadable::Unsupported { reason, .. } => {
             let msg = Paragraph::new(format!("Unsupported: {}", reason));
-            msg.render(area, buf);
+            Widget::render(msg, area, buf);
         }
     }
 }
