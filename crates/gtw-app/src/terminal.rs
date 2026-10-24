@@ -1,5 +1,4 @@
 use std::io::{self, Stdout};
-use std::time::Duration;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;

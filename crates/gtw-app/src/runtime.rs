@@ -2,9 +2,8 @@ use std::io;
 use std::time::Duration;
 
 use crossterm::event::{self, Event};
-use gtw_core::{AppState, Msg};
+use gtw_core::{AppState, Msg, Screen};
 use gtw_render::{EffectManager, merged_themes};
-use tokio::sync::mpsc;
 
 use crate::{Action, draw, init, map_key, restore};
 
@@ -16,7 +15,6 @@ pub async fn run() -> io::Result<()> {
     let mut effects = EffectManager::new();
     effects.add_startup();
 
-    // Simple demo: cycle through splash briefly
     let mut tick_count = 0;
 
     loop {
@@ -40,8 +38,8 @@ pub async fn run() -> io::Result<()> {
                         let _cmds = state.update(Msg::ShowThemePicker);
                     }
                     Action::Back => {
-                        if matches!(state.screen, gtw_core::Screen::ThemePicker) {
-                            state.screen = gtw_core::Screen::Splash;
+                        if matches!(state.screen, Screen::ThemePicker) {
+                            state.screen = Screen::Splash;
                         }
                     }
                     _ => {}
@@ -52,8 +50,8 @@ pub async fn run() -> io::Result<()> {
         }
 
         tick_count += 1;
-        if tick_count > 10 && matches!(state.screen, gtw_core::Screen::Splash) {
-            state.screen = gtw_core::Screen::Home;
+        if tick_count > 10 && matches!(state.screen, Screen::Splash) {
+            state.screen = Screen::Home;
         }
     }
 

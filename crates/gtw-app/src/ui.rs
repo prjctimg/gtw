@@ -1,9 +1,9 @@
 use gtw_core::{AppState, Screen};
-use gtw_render::{merged_themes, render_loadable, render_skeleton, render_wordmark};
+use gtw_render::render_wordmark;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Tabs};
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
 
 pub fn draw(f: &mut Frame, state: &AppState, themes: &[gtw_core::ThemeEntry], theme_idx: usize) {
     let size = f.area();
@@ -91,7 +91,6 @@ pub fn draw(f: &mut Frame, state: &AppState, themes: &[gtw_core::ThemeEntry], th
     // Content
     match state.screen {
         Screen::Splash => {
-            render_skeleton(main_chunks[1], f.buffer_mut());
             let msg = Paragraph::new("Loading gtw...").style(Style::default().fg(theme.fg));
             let r = Rect {
                 x: main_chunks[1].x + 2,
