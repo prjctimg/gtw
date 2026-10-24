@@ -1,4 +1,4 @@
-use gtw_core::{ActivityCenter, Loadable};
+use crate::{ActivityCenter, Loadable};
 
 #[derive(Debug, Clone)]
 pub enum Screen {
