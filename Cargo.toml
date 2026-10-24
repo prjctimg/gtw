@@ -39,7 +39,7 @@ html5ever = "0.36"
 select = "0.6"
 rusqlite = { version = "0.37", features = ["bundled", "chrono"] }
 zstd = "0.13"
-symphonia = { version = "0.6", features = ["ogg", "mp3", "flac", "wav", "opus"] }
+symphonia = { version = "0.6", features = ["ogg", "mp3", "flac", "wav"] }
 rodio = { version = "0.21", default-features = false, features = ["symphonia-all"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp", "tga"] }
 resvg = "0.45"
