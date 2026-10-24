@@ -16,3 +16,14 @@ tracing = { workspace = true }
 chrono = { workspace = true }
 tokio = { workspace = true }
 dirs = { workspace = true }
+[dependencies]
+rusqlite = { workspace = true }
+zstd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+dirs = { workspace = true }
+gtw-core = { path = "../gtw-core" }
