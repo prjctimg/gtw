@@ -17,7 +17,3 @@ tracing = { workspace = true }
 tachyonfx = { workspace = true }
 ratatui = { workspace = true }
 tui-big-text = { workspace = true }
-[dependencies]
-scraper = { workspace = true }
-html5ever = { workspace = true }
-gtw-core = { path = "../gtw-core" }

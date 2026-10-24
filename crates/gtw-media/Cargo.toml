@@ -15,7 +15,3 @@ ratatui-image = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true }
-[dependencies]
-zvidlib = { workspace = true, optional = true }
-rusty_vp9 = { workspace = true }
-matroska-demuxer = { workspace = true }
