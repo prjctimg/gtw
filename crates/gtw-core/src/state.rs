@@ -1,7 +1,4 @@
-use std::collections::VecDeque;
-use std::sync::Arc;
-
-use crate::{ActivityCenter, Loadable, RequestId, TabId};
+use gtw_core::{ActivityCenter, Loadable};
 
 #[derive(Debug, Clone)]
 pub enum Screen {
@@ -20,7 +17,7 @@ pub enum Screen {
 
 #[derive(Debug, Clone)]
 pub struct Tab {
-    pub id: TabId,
+    pub id: crate::TabId,
     pub title: Option<String>,
     pub article: Loadable<crate::Article>,
     pub scroll: u16,
@@ -30,7 +27,7 @@ pub struct Tab {
 pub struct AppState {
     pub screen: Screen,
     pub tabs: Vec<Tab>,
-    pub active_tab: Option<TabId>,
+    pub active_tab: Option<crate::TabId>,
     pub home: Loadable<Feed>,
     pub search: SearchState,
     pub bookmarks: Loadable<BookmarkList>,
@@ -88,17 +85,13 @@ impl Default for AppState {
 
 impl AppState {
     pub fn update(&mut self, msg: crate::Msg) -> Vec<crate::Cmd> {
-        let mut cmds = Vec::new();
+        let cmds = Vec::new();
         match msg {
             crate::Msg::Quit => {
                 self.should_quit = true;
             }
-            crate::Msg::ThemeNext => {
-                // Handled by gtw-render/gtw-app
-            }
-            crate::Msg::ThemePrev => {
-                // Handled by gtw-render/gtw-app
-            }
+            crate::Msg::ThemeNext => {}
+            crate::Msg::ThemePrev => {}
             crate::Msg::ShowThemePicker => {
                 self.screen = Screen::ThemePicker;
             }

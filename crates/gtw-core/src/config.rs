@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Config {
     pub general: GeneralConfig,
@@ -71,26 +71,9 @@ pub struct EditorConfig {
     pub autosave: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct KeysConfig {}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            general: GeneralConfig::default(),
-            network: NetworkConfig::default(),
-            cache: CacheConfig::default(),
-            render: RenderConfig::default(),
-            media: MediaConfig::default(),
-            effects: EffectsConfig::default(),
-            theme: ThemeConfig::default(),
-            auth: AuthConfig::default(),
-            editor: EditorConfig::default(),
-            keys: KeysConfig::default(),
-        }
-    }
-}
 
 impl Default for GeneralConfig {
     fn default() -> Self {
@@ -153,11 +136,5 @@ impl Default for AuthConfig {
 impl Default for EditorConfig {
     fn default() -> Self {
         Self { autosave: true }
-    }
-}
-
-impl Default for KeysConfig {
-    fn default() -> Self {
-        Self {}
     }
 }

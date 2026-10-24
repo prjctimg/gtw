@@ -1,7 +1,4 @@
-use std::sync::Arc;
-use std::time::SystemTime;
-
-use crate::{LoadError, Loadable, Progress, RequestId, Source, TabId};
+use crate::{LoadError, RequestId, Source, TabId};
 
 #[derive(Debug, Clone)]
 pub enum Msg {

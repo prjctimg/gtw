@@ -85,8 +85,9 @@ pub enum LoadErrorKind {
     Unknown,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Loadable<T> {
+    #[default]
     Idle,
     Queued {
         queued_at: Instant,
@@ -122,12 +123,6 @@ pub enum Loadable<T> {
         reason: String,
         fallback: Fallback,
     },
-}
-
-impl<T> Default for Loadable<T> {
-    fn default() -> Self {
-        Loadable::Idle
-    }
 }
 
 impl<T> Loadable<T> {
