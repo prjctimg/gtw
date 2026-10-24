@@ -7,7 +7,7 @@ use ratatui::widgets::{Paragraph, Widget};
 pub fn render_skeleton(area: Rect, buf: &mut Buffer) {
     for y in area.y..area.y + area.height.min(6) {
         for x in area.x..area.x + area.width.saturating_sub(4) {
-            if ((x + y) as usize) % 3 == 0 {
+            if ((x + y) as usize).is_multiple_of(3) {
                 buf[(x, y)]
                     .set_char('░')
                     .set_style(Style::default().fg(Color::DarkGray));
