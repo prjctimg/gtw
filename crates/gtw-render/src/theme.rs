@@ -61,12 +61,36 @@ fn load_from_str(s: &str) -> Vec<ThemeEntry> {
     t.themes
         .into_iter()
         .map(|d| {
-            let pane_bg = d.pane_bg.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.bg));
-            let elevated_bg = d.elevated_bg.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.picker_bg));
-            let muted_border = d.muted_border.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.border));
-            let notification_border = d.notification_border.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.border_active));
-            let secondary_accent = d.secondary_accent.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.accent));
-            let tertiary_accent = d.tertiary_accent.as_ref().map(|x| parse_color(x)).unwrap_or_else(|| parse_color(&d.accent));
+            let pane_bg = d
+                .pane_bg
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.bg));
+            let elevated_bg = d
+                .elevated_bg
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.picker_bg));
+            let muted_border = d
+                .muted_border
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.border));
+            let notification_border = d
+                .notification_border
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.border_active));
+            let secondary_accent = d
+                .secondary_accent
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.accent));
+            let tertiary_accent = d
+                .tertiary_accent
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.accent));
             ThemeEntry {
                 name: d.name,
                 light: d.light,

@@ -1,9 +1,9 @@
-pub mod theme;
-pub mod wordmark;
 pub mod effects;
+pub mod theme;
 pub mod ui;
+pub mod wordmark;
 
-pub use theme::*;
-pub use wordmark::*;
 pub use effects::*;
+pub use theme::*;
 pub use ui::*;
+pub use wordmark::*;

@@ -8,18 +8,27 @@ pub fn render_skeleton(area: Rect, buf: &mut Buffer) {
     for y in area.y..area.y + area.height.min(6) {
         for x in area.x..area.x + area.width.saturating_sub(4) {
             if ((x + y) as usize) % 3 == 0 {
-                buf[(x, y)].set_char('░').set_style(Style::default().fg(Color::DarkGray));
+                buf[(x, y)]
+                    .set_char('░')
+                    .set_style(Style::default().fg(Color::DarkGray));
             }
         }
     }
 }
 
-pub fn render_loadable<T>(area: Rect, buf: &mut Buffer, loadable: &Loadable<T>, render_ready: impl FnOnce(Rect, &mut Buffer, &T)) {
+pub fn render_loadable<T>(
+    area: Rect,
+    buf: &mut Buffer,
+    loadable: &Loadable<T>,
+    render_ready: impl FnOnce(Rect, &mut Buffer, &T),
+) {
     match loadable {
         Loadable::Idle | Loadable::Queued { .. } => {
             render_skeleton(area, buf);
         }
-        Loadable::Loading { previous: Some(p), .. } => {
+        Loadable::Loading {
+            previous: Some(p), ..
+        } => {
             render_ready(area, buf, p.as_ref());
         }
         Loadable::Loading { previous: None, .. } => {
@@ -31,14 +40,26 @@ pub fn render_loadable<T>(area: Rect, buf: &mut Buffer, loadable: &Loadable<T>, 
         Loadable::Ready { value, .. } => {
             render_ready(area, buf, value.as_ref());
         }
-        Loadable::Failed { previous: Some(p), error, .. } => {
+        Loadable::Failed {
+            previous: Some(p),
+            error,
+            ..
+        } => {
             render_ready(area, buf, p.as_ref());
             let msg = Paragraph::new(format!("Error: {} (r to retry)", error.message))
                 .style(Style::default().fg(Color::Red));
-            let r = Rect { y: area.y + area.height.saturating_sub(1), height: 1, ..area };
+            let r = Rect {
+                y: area.y + area.height.saturating_sub(1),
+                height: 1,
+                ..area
+            };
             msg.render(r, buf);
         }
-        Loadable::Failed { previous: None, error, .. } => {
+        Loadable::Failed {
+            previous: None,
+            error,
+            ..
+        } => {
             let msg = Paragraph::new(format!("Error: {} (r to retry)", error.message))
                 .style(Style::default().fg(Color::Red));
             msg.render(area, buf);

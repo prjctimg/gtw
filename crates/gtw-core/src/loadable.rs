@@ -134,15 +134,22 @@ impl<T> Loadable<T> {
     pub fn value(&self) -> Option<&T> {
         match self {
             Loadable::Ready { value, .. } => Some(value.as_ref()),
-            Loadable::Loading { previous: Some(p), .. } => Some(p.as_ref()),
+            Loadable::Loading {
+                previous: Some(p), ..
+            } => Some(p.as_ref()),
             Loadable::Refreshing { previous, .. } => Some(previous.as_ref()),
-            Loadable::Failed { previous: Some(p), .. } => Some(p.as_ref()),
+            Loadable::Failed {
+                previous: Some(p), ..
+            } => Some(p.as_ref()),
             _ => None,
         }
     }
 
     pub fn is_loading(&self) -> bool {
-        matches!(self, Loadable::Loading { .. } | Loadable::Refreshing { .. } | Loadable::Queued { .. })
+        matches!(
+            self,
+            Loadable::Loading { .. } | Loadable::Refreshing { .. } | Loadable::Queued { .. }
+        )
     }
 
     pub fn is_ready(&self) -> bool {

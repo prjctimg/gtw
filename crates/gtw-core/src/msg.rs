@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use crate::{Loadable, LoadError, Progress, RequestId, Source, TabId};
+use crate::{LoadError, Loadable, Progress, RequestId, Source, TabId};
 
 #[derive(Debug, Clone)]
 pub enum Msg {
@@ -11,7 +11,10 @@ pub enum Msg {
     Tick,
 
     // Navigation
-    OpenArticle { title: String, tab: Option<TabId> },
+    OpenArticle {
+        title: String,
+        tab: Option<TabId>,
+    },
     GoBack,
     GoForward,
     SwitchTab(TabId),
@@ -62,8 +65,18 @@ pub struct SearchHit {
 
 #[derive(Debug, Clone)]
 pub enum Cmd {
-    FetchArticle { req: RequestId, tab: TabId, title: String },
-    Search { req: RequestId, query: String },
-    FetchImage { req: RequestId, url: String },
+    FetchArticle {
+        req: RequestId,
+        tab: TabId,
+        title: String,
+    },
+    Search {
+        req: RequestId,
+        query: String,
+    },
+    FetchImage {
+        req: RequestId,
+        url: String,
+    },
     Cancel(RequestId),
 }

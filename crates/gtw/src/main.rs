@@ -19,10 +19,14 @@ async fn main() -> miette::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
-    
+
     let args = Args::parse();
-    tracing::info!("gtw starting offline={} no_animations={}", args.offline, args.no_animations);
-    
+    tracing::info!(
+        "gtw starting offline={} no_animations={}",
+        args.offline,
+        args.no_animations
+    );
+
     gtw_app::run().await.map_err(|e| miette::miette!(e))?;
     Ok(())
 }

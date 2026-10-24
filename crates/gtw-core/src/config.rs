@@ -118,7 +118,9 @@ impl Default for CacheConfig {
 
 impl Default for RenderConfig {
     fn default() -> Self {
-        Self { syntax_highlight: true }
+        Self {
+            syntax_highlight: true,
+        }
     }
 }
 
@@ -136,7 +138,9 @@ impl Default for EffectsConfig {
 
 impl Default for ThemeConfig {
     fn default() -> Self {
-        Self { name: "Chadrula".to_string() }
+        Self {
+            name: "Chadrula".to_string(),
+        }
     }
 }
 

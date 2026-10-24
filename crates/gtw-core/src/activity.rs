@@ -55,7 +55,9 @@ pub struct ActivityCenter {
 
 impl ActivityCenter {
     pub fn new() -> Self {
-        Self { activities: Vec::new() }
+        Self {
+            activities: Vec::new(),
+        }
     }
 
     pub fn push(&mut self, activity: Activity) {
