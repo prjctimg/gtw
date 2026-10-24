@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'false'
+  VERGEN_GIT_SHA: ${{ github.sha }}
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - name: no-ffmpeg grep
+        run: |
+          set -e
+          ! grep -rn "ffmpeg\|libavcodec\|libavformat" . --include='*.rs' --include='Cargo.toml' --include='Cargo.lock' | grep -v '^\./specs/'
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace --no-fail-fast
+      - run: cargo build --workspace --release
