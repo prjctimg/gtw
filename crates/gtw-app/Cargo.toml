@@ -1,0 +1,22 @@
+[package]
+name = "gtw-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gtw-core = { path = "../gtw-core" }
+gtw-api = { path = "../gtw-api" }
+gtw-cache = { path = "../gtw-cache" }
+gtw-render = { path = "../gtw-render" }
+gtw-media = { path = "../gtw-media" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+crossterm = { workspace = true }
+ratatui = { workspace = true }
+tachyonfx = { workspace = true }
+tui-big-text = { workspace = true }
+tokio-util = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
