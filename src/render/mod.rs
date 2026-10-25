@@ -11,7 +11,10 @@ pub use theme::*;
 pub use ui::*;
 #[allow(unused_imports)]
 pub use wordmark::*;
+pub mod feed;
 pub mod html;
 
+#[allow(unused_imports)]
+pub use feed::*;
 #[allow(unused_imports)]
 pub use html::*;
