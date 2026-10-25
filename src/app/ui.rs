@@ -176,6 +176,27 @@ pub fn draw(f: &mut Frame, state: &AppState, themes: &[crate::core::ThemeEntry],
                 );
             f.render_widget(list, main_chunks[1]);
         }
+        Screen::Auth => {
+            let msg = Paragraph::new("Auth: OAuth PKCE / Bot Password")
+                .style(Style::default().fg(theme.fg));
+            f.render_widget(msg, main_chunks[1]);
+        }
+        Screen::Bookmarks => {
+            let msg = Paragraph::new("Bookmarks").style(Style::default().fg(theme.fg));
+            f.render_widget(msg, main_chunks[1]);
+        }
+        Screen::Watchlist => {
+            let msg = Paragraph::new("Watchlist").style(Style::default().fg(theme.fg));
+            f.render_widget(msg, main_chunks[1]);
+        }
+        Screen::Editor => {
+            let msg = Paragraph::new("Editor").style(Style::default().fg(theme.fg));
+            f.render_widget(msg, main_chunks[1]);
+        }
+        Screen::Settings => {
+            let msg = Paragraph::new("Settings").style(Style::default().fg(theme.fg));
+            f.render_widget(msg, main_chunks[1]);
+        }
         _ => {
             let msg = Paragraph::new(format!("Screen: {:?}", state.screen))
                 .style(Style::default().fg(theme.fg));

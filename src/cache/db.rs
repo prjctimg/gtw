@@ -135,7 +135,12 @@ impl Cache {
             .as_secs() as i64;
         self.conn.execute(
             "INSERT OR REPLACE INTO bookmarks(title, folder, added_at, pinned) VALUES(?1,?2,?3,?4)",
-            rusqlite::params![title, folder.unwrap_or("default"), now, if pinned { 1i64 } else { 0i64 }],
+            rusqlite::params![
+                title,
+                folder.unwrap_or("default"),
+                now,
+                if pinned { 1i64 } else { 0i64 }
+            ],
         )?;
         Ok(())
     }
@@ -166,20 +171,31 @@ impl Cache {
 
     #[allow(dead_code)]
     pub fn add_to_watchlist(&self, title: &str) -> Result<()> {
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
-        self.conn.execute("INSERT OR IGNORE INTO watchlist(title, added_at, seen) VALUES(?1,?2,0)", rusqlite::params![title, now])?;
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64;
+        self.conn.execute(
+            "INSERT OR IGNORE INTO watchlist(title, added_at, seen) VALUES(?1,?2,0)",
+            rusqlite::params![title, now],
+        )?;
         Ok(())
     }
 
     #[allow(dead_code)]
     pub fn remove_from_watchlist(&self, title: &str) -> Result<()> {
-        self.conn.execute("DELETE FROM watchlist WHERE title = ?1", rusqlite::params![title])?;
+        self.conn.execute(
+            "DELETE FROM watchlist WHERE title = ?1",
+            rusqlite::params![title],
+        )?;
         Ok(())
     }
 
     #[allow(dead_code)]
     pub fn list_watchlist(&self) -> Result<Vec<String>> {
-        let mut stmt = self.conn.prepare("SELECT title FROM watchlist ORDER BY added_at DESC")?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT title FROM watchlist ORDER BY added_at DESC")?;
         let mut rows = stmt.query([])?;
         let mut out = Vec::new();
         while let Some(row) = rows.next()? {

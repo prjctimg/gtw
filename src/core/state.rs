@@ -14,6 +14,7 @@ pub enum Screen {
     Media,
     Settings,
     ThemePicker,
+    Auth,
 }
 
 #[derive(Debug, Clone)]
