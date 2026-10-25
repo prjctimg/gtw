@@ -4,4 +4,6 @@ pub mod spike;
 pub mod video;
 
 #[allow(dead_code)]
-pub fn init() {}
+pub fn init() {
+    let _ = crate::core::activity::ActivityCenter::new();
+}
