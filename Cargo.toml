@@ -1,23 +1,16 @@
-[workspace]
-resolver = "3"
-members = [
-    "crates/gtw-core",
-    "crates/gtw-api",
-    "crates/gtw-cache",
-    "crates/gtw-render",
-    "crates/gtw-media",
-    "crates/gtw-app",
-    "crates/gtw",
-]
-
-[workspace.package]
+[package]
+name = "gtw"
 version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-only"
 repository = "https://github.com/prjctimg/gtw"
 readme = "README.md"
 
-[workspace.dependencies]
+[[bin]]
+name = "gtw"
+path = "src/main.rs"
+
+[dependencies]
 anyhow = "1.0"
 thiserror = "2.0"
 tracing = "0.1"
@@ -32,11 +25,10 @@ ratatui = "0.30"
 tui-big-text = "0.8"
 tachyonfx = "0.25"
 dirs = "6.0"
-keyring = { version = "3.6", features = ["linux-native", "windows-native", "apple-native"] }
+keyring = { version = "3.6" }
 reqwest = { version = "0.12", features = ["json", "gzip", "brotli", "stream"] }
 scraper = "0.24"
 html5ever = "0.36"
-select = "0.6"
 rusqlite = { version = "0.37", features = ["bundled", "chrono"] }
 zstd = "0.13"
 symphonia = { version = "0.6", features = ["ogg", "mp3", "flac", "wav"] }
@@ -51,6 +43,9 @@ uuid = { version = "1.18", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 url = "2.5"
 miette = { version = "7.6", features = ["fancy"] }
+rusty_vp9 = "0.1"
+matroska-demuxer = "0.7"
+tempfile = "3.14"
 
 [profile.release]
 lto = "fat"
@@ -65,7 +60,3 @@ strip = "debuginfo"
 [profile.dev]
 debug = 1
 split-debuginfo = "unpacked"
-
-zvidlib = { git = "https://github.com/gtw-project/zvidlib", rev = "main", optional = true }
-rusty_vp9 = "0.1"
-matroska-demuxer = "0.7"
