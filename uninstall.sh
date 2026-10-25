@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# gtm uninstaller — see https://gtmd.dev
+# gtw uninstaller — see https://gtwd.dev
 #
 # Usage:
-#   curl -fsSL https://gtmd.dev/uninstall.sh | bash
+#   curl -fsSL https://gtwd.dev/uninstall.sh | bash
 #   uninstall.sh                      # remove what install.sh put on this system
 #   uninstall.sh --purge              # also delete config, library and caches
 #   uninstall.sh --prefix /usr/local  # uninstall from a custom prefix
@@ -10,7 +10,7 @@
 # Directory resolution is the same as install.sh's, env var for env var, so
 # `install.sh --prefix ~/.local && uninstall.sh --prefix ~/.local` always agree.
 # Nothing is removed unless it is a file the installer owns: every path is
-# checked against the expected gtm names first, and `--purge` is the only way
+# checked against the expected gtw names first, and `--purge` is the only way
 # to touch a directory as a whole.
 #
 # Recognised standard environment variables (all overridable):
@@ -29,13 +29,13 @@ BOLD='\033[1m'
 
 usage() {
   cat <<EOF
-gtm uninstaller — https://gtmd.dev
+gtw uninstaller — https://gtwd.dev
 
 Usage: uninstall.sh [options]
 
 Options:
   -h, --help            Show this help message
-  -p, --prefix <dir>    Prefix gtm was installed under (default: \$HOME/.local)
+  -p, --prefix <dir>    Prefix gtw was installed under (default: \$HOME/.local)
       --purge           Also remove config, library and caches (asks first)
   -y, --yes             Non-interactive: never prompt
 
@@ -47,14 +47,14 @@ values are ignored entirely:
 
       --home <dir>       Treat <dir> as the user's home for every purge
                          target, ignoring inherited XDG_* variables
-      --config-dir <dir> Purge <dir>/gtm instead of the XDG config root
-      --data-dir <dir>   Purge <dir>/gtm instead of the XDG data root
-      --cache-dir <dir>  Purge <dir>/gtm instead of the XDG cache root
+      --config-dir <dir> Purge <dir>/gtw instead of the XDG config root
+      --data-dir <dir>   Purge <dir>/gtw instead of the XDG data root
+      --cache-dir <dir>  Purge <dir>/gtw instead of the XDG cache root
       --runtime-dir <dir>
-                         Purge <dir>/gtm instead of XDG_RUNTIME_DIR
+                         Purge <dir>/gtw instead of XDG_RUNTIME_DIR
 
 Examples:
-  curl -fsSL https://gtmd.dev/uninstall.sh | bash
+  curl -fsSL https://gtwd.dev/uninstall.sh | bash
   uninstall.sh --purge
   uninstall.sh --prefix /usr/local
   uninstall.sh --purge -y --home /tmp/sandbox
@@ -238,48 +238,48 @@ rm_files() {
 # running service leaves systemd complaining about a unit it cannot find.
 # `is-enabled` exits 0 even for `disabled`, so the state word is what is read.
 if command -v systemctl >/dev/null 2>&1; then
-  enabled="$(systemctl --user is-enabled gtmd.service 2>/dev/null || true)"
-  active="$(systemctl --user is-active gtmd.service 2>/dev/null || true)"
+  enabled="$(systemctl --user is-enabled gtwd.service 2>/dev/null || true)"
+  active="$(systemctl --user is-active gtwd.service 2>/dev/null || true)"
   if [ "${active}" = "active" ] || { [ -n "${enabled}" ] && [ "${enabled}" != "disabled" ] && [ "${enabled}" != "not-found" ]; }; then
-    stage "⚙️  stopping gtmd"
-    systemctl --user disable --now gtmd.service >/dev/null 2>&1 || true
+    stage "⚙️  stopping gtwd"
+    systemctl --user disable --now gtwd.service >/dev/null 2>&1 || true
     stage_ok
-    ok "gtmd stopped and disabled"
+    ok "gtwd stopped and disabled"
   fi
 fi
 
 # A daemon started by hand (not via systemd) holds the socket and the mixer;
 # both are released on SIGTERM.
-if command -v pgrep >/dev/null 2>&1 && pgrep -x gtmd >/dev/null 2>&1; then
-  stage "⏹️  stopping a running gtmd"
-  command -v pkill >/dev/null 2>&1 && pkill -TERM -x gtmd 2>/dev/null || :
+if command -v pgrep >/dev/null 2>&1 && pgrep -x gtwd >/dev/null 2>&1; then
+  stage "⏹️  stopping a running gtwd"
+  command -v pkill >/dev/null 2>&1 && pkill -TERM -x gtwd 2>/dev/null || :
   stage_ok
-  ok "gtmd stopped"
+  ok "gtwd stopped"
 fi
 
 # ── Installed files ───────────────────────────────────────────────────────────
 stage "📦 binaries"
-rm_path "${bindir}/gtm" "gtm"
-rm_path "${bindir}/gtmd" "gtmd"
+rm_path "${bindir}/gtw" "gtw"
+rm_path "${bindir}/gtwd" "gtwd"
 stage_ok
 
-rm_files "${mandir}" "📖 man pages" gtm.1 gtmd.1 gtmd-ipc.1
+rm_files "${mandir}" "📖 man pages" gtw.1 gtwd.1 gtwd-ipc.1
 
-rm_files "${bash_comp_dir}" "⌨️  shell completions" gtm gtmd
-rm_files "${zsh_comp_dir}" "⌨️  shell completions" _gtm _gtmd
-rm_files "${fish_comp_dir}" "⌨️  shell completions" gtm.fish gtmd.fish
-rm_files "${elvish_comp_dir}" "⌨️  shell completions" gtm.elv gtmd.elv
-rm_files "${powershell_comp_dir}" "⌨️  shell completions" gtm.ps1 gtmd.ps1
+rm_files "${bash_comp_dir}" "⌨️  shell completions" gtw gtwd
+rm_files "${zsh_comp_dir}" "⌨️  shell completions" _gtw _gtwd
+rm_files "${fish_comp_dir}" "⌨️  shell completions" gtw.fish gtwd.fish
+rm_files "${elvish_comp_dir}" "⌨️  shell completions" gtw.elv gtwd.elv
+rm_files "${powershell_comp_dir}" "⌨️  shell completions" gtw.ps1 gtwd.ps1
 
-if [ -f "${systemd_dir}/gtmd.service" ]; then
+if [ -f "${systemd_dir}/gtwd.service" ]; then
   stage "⚙️  systemd user unit"
-  rm_path "${systemd_dir}/gtmd.service" "gtmd.service"
+  rm_path "${systemd_dir}/gtwd.service" "gtwd.service"
   systemctl --user daemon-reload >/dev/null 2>&1 || true
   stage_ok
 fi
 
-rm_path "${applications_dir}/gtm.desktop" "gtm.desktop"
-rm_path "${icons_dir}/gtm.svg" "gtm.svg"
+rm_path "${applications_dir}/gtw.desktop" "gtw.desktop"
+rm_path "${icons_dir}/gtw.svg" "gtw.svg"
 
 # ── Shell profile PATH lines ──────────────────────────────────────────────────
 # Only the lines the installer wrote: its marker comment, and the PATH line
@@ -292,9 +292,9 @@ stage "📝 shell profile"
 stripped=0
 for file in "${HOME}/.bashrc" "${HOME}/.zshrc" "${HOME}/.config/fish/config.fish"; do
   [ -f "$file" ] || continue
-  grep -q "Added by gtm installer" "$file" 2>/dev/null || continue
+  grep -q "Added by gtw installer" "$file" 2>/dev/null || continue
   tmp="$(mktemp)"
-  grep -vE "Added by gtm installer|${bindir}|\\\$HOME${bindir_tail}|~${bindir_tail}" "$file" \
+  grep -vE "Added by gtw installer|${bindir}|\\\$HOME${bindir_tail}|~${bindir_tail}" "$file" \
     | sed '/./,$!d' >"$tmp" && cat "$tmp" >"$file"
   rm -f "$tmp"
   ok "cleaned $(basename "$file")"
@@ -323,24 +323,24 @@ if [ "${PURGE}" = 1 ]; then
   purge_guard "$purge_config_root" config
   purge_guard "$purge_data_root" data
   purge_guard "$purge_cache_root" cache
-  rm_path "${purge_config_root}/gtm" "config"
-  rm_path "${purge_data_root}/gtm" "library, state and covers"
-  rm_path "${purge_cache_root}/gtm" "cover cache"
+  rm_path "${purge_config_root}/gtw" "config"
+  rm_path "${purge_data_root}/gtw" "library, state and covers"
+  rm_path "${purge_cache_root}/gtw" "cover cache"
   # The runtime directory holds the daemon's socket and pid file. A running
   # daemon is already gone by this point (both the systemd and the pkill stage
   # above), so the leftovers are stale sockets — but if one is somehow still
   # holding the file, leave it: deleting a live daemon's socket breaks the
   # client with no way back short of a restart.
   if [ -n "$purge_runtime_root" ] \
-    && ! { command -v pgrep >/dev/null 2>&1 && pgrep -x gtmd >/dev/null 2>&1; }; then
-    rm_path "${purge_runtime_root}/gtm" "runtime files"
+    && ! { command -v pgrep >/dev/null 2>&1 && pgrep -x gtwd >/dev/null 2>&1; }; then
+    rm_path "${purge_runtime_root}/gtw" "runtime files"
   fi
   stage_ok
 fi
 
 if [ "${removed}" -gt 0 ]; then
   ok "uninstalled"
-  info "reinstall with: curl -fsSL https://gtmd.dev/install.sh | bash"
+  info "reinstall with: curl -fsSL https://gtwd.dev/install.sh | bash"
 else
-  log "nothing to remove — gtm does not appear to be installed under ${PREFIX}"
+  log "nothing to remove — gtw does not appear to be installed under ${PREFIX}"
 fi

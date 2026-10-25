@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for considering contributing to `gtm`, this is a friendly, hobby
+Thanks for considering contributing to `gtw`, this is a friendly, hobby
 project: feedback, bug reports are welcome. Currently the project is still new so PRs are restricted for now, these will be unlocked after the first major (`v1`).
 
 ## Build from source
@@ -31,7 +31,7 @@ make termux
 #   cargo build --release --features pulseaudio
 ```
 
-At runtime `gtmd` auto-selects the PulseAudio backend on Termux and
+At runtime `gtwd` auto-selects the PulseAudio backend on Termux and
 auto-starts the server, so no `pulseaudio --start` step is required.
 
 Cross-compiling from Linux still uses `cargo-ndk` (see `make termux`):
@@ -58,10 +58,10 @@ strip = "symbols"
 cargo test
 
 # Run tests for a specific module's integration tests (single crate)
-cargo test -p gtm
+cargo test -p gtw
 
 # Run inline tests only (no integration tests)
-cargo test --lib -p gtm
+cargo test --lib -p gtw
 ```
 
 ## Linting & Formatting
@@ -79,20 +79,20 @@ cargo fmt
 
 ## Project Structure
 
-The codebase is a single crate (`gtm`) with the shared core, audio backend,
+The codebase is a single crate (`gtw`) with the shared core, audio backend,
 MPRIS integration, and daemon subsystems living as module trees under
-`gtm/src/`. Two binaries ship from `gtm/`: `gtm` (TUI, `tui` feature) and
-`gtmd` (daemon, always built).
+`gtw/src/`. Two binaries ship from `gtw/`: `gtw` (TUI, `tui` feature) and
+`gtwd` (daemon, always built).
 
 ```
-gtm/
-├── gtm/                    The single crate — client, daemon, core, audio, MPRIS
+gtw/
+├── gtw/                    The single crate — client, daemon, core, audio, MPRIS
 │   ├── Cargo.toml          Merged dependencies, features, [[bin]] targets
 │   ├── build.rs            Build-time env (VERGEN, Termux warning, mold)
 │   ├── src/
 │   │   ├── lib.rs          Module declarations, re-exports
-│   │   ├── main.rs         gtm CLI/TUI entry point
-│   │   ├── daemon_main.rs  gtmd daemon binary entry point
+│   │   ├── main.rs         gtw CLI/TUI entry point
+│   │   ├── daemon_main.rs  gtwd daemon binary entry point
 │   │   ├── app.rs          App state machine (~5000 lines)
 │   │   ├── ui.rs           TUI rendering (~4400 lines)
 │   │   ├── keymap.rs       Context-aware keybinding dispatch
@@ -140,14 +140,14 @@ gtm/
 │   │       ├── cover.rs    Cross-provider cover routing
 │   │       └── lyrics.rs   Cross-provider lyrics routing
 │   └── tests/              Integration tests (core, playback, opus)
-├── gtmd/                   Daemon crate (gtmd binary, core playback engine)
+├── gtwd/                   Daemon crate (gtwd binary, core playback engine)
 │   └── src/
 │       ├── lib.rs          Module declarations, re-exports
 │       ├── daemon/         Event loop, client handling, command dispatch
 │       │   ├── mod.rs      Daemon, DaemonInner, Cmd, command dispatch
 │       │   ├── cover.rs    Cover routing across providers
 │       │   └── lyrics.rs   Lyrics routing
-│       ├── providers/      Per-integration daemon code (mirrors gtm/src/providers)
+│       ├── providers/      Per-integration daemon code (mirrors gtw/src/providers)
 │       │   ├── spotify/    Web API, librespot bridge, artwork, lyrics, IPC
 │       │   ├── radio/      Radio Browser client, station tracklists
 │       │   ├── podcast/    Feed storage, RSS/Atom parsing
@@ -170,7 +170,7 @@ gtm/
 ├── Formula/                Homebrew formula
 ├── artifacts/              Generated manpages and completions
 ├── Makefile                Build targets (release, test, man, completions, deb, rpm)
-├── Cargo.toml              Workspace root (members: gtm, gtmd)
+├── Cargo.toml              Workspace root (members: gtw, gtwd)
 └── flake.nix               Nix flake
 ```
 
@@ -178,26 +178,26 @@ gtm/
 
 | File                       | Purpose                                                                       |
 | -------------------------- | ----------------------------------------------------------------------------- |
-| `gtm/src/app/mod.rs`       | Application state machine: input handling, IPC dispatch, crossfade, preferences |
-| `gtm/src/app/cover.rs`     | Cross-provider cover routing: which surface fetches what, stale-reply guards |
-| `gtm/src/app/lyrics.rs`    | Cross-provider lyrics routing and the time-sync highlight                    |
-| `gtm/src/providers/`       | One directory per integration: wire types, state, actions, pickers            |
-| `gtm/src/ui/chrome.rs`     | TUI rendering: layout, panes, list viewports, overlays                        |
-| `gtm/src/ui/pickers/`      | Picker overlay rendering, dispatched from `PickerId`                          |
-| `gtm/src/keymap.rs`        | Context-aware keybinding dispatch (Global, Normal, List)                      |
-| `gtm/src/theme.rs`         | 16 built-in themes + TOML user themes, contrast-safe rendering                |
-| `gtm/src/footer.rs`        | Modular footer: 14 module types, 3 built-in presets, TOML user presets        |
-| `gtm/src/picker.rs`        | Picker overlay manager: LIFO stack of 15 picker types                         |
-| `gtm/src/cli.rs`           | CLI command definitions (30+ subcommands via clap)                            |
-| `gtm/src/shared/ipc.rs`    | IPC protocol: wire format, 68 typed commands, 30+ events                      |
-| `gtm/src/shared/state.rs`  | DaemonState, EQ presets (16), easing functions (7)                            |
-| `gtm/src/shared/client.rs` | Async IPC client: reconnection, clock estimation, typed API                   |
-| `gtm/src/audio/mixer.rs`   | Audio mixer: dual-player crossfade, decode threads, ring buffer               |
-| `gtm/src/audio/eq.rs`      | 15-band parametric EQ (fundsp) + stereo reverb                                |
-| `gtmd/src/daemon/mod.rs`   | Daemon, DaemonInner, Cmd: tokio event loop, client handling, command dispatch  |
-| `gtmd/src/providers/`      | One directory per integration: clients, artwork, lyrics, streaming            |
-| `gtmd/src/cover.rs`        | Shared cover cache (LRU + on-disk), keyed by artist/album or by URL           |
-| `gtmd/src/library.rs`      | SQLite library: tracks, playlists, metadata extraction, M3U                   |
+| `gtw/src/app/mod.rs`       | Application state machine: input handling, IPC dispatch, crossfade, preferences |
+| `gtw/src/app/cover.rs`     | Cross-provider cover routing: which surface fetches what, stale-reply guards |
+| `gtw/src/app/lyrics.rs`    | Cross-provider lyrics routing and the time-sync highlight                    |
+| `gtw/src/providers/`       | One directory per integration: wire types, state, actions, pickers            |
+| `gtw/src/ui/chrome.rs`     | TUI rendering: layout, panes, list viewports, overlays                        |
+| `gtw/src/ui/pickers/`      | Picker overlay rendering, dispatched from `PickerId`                          |
+| `gtw/src/keymap.rs`        | Context-aware keybinding dispatch (Global, Normal, List)                      |
+| `gtw/src/theme.rs`         | 16 built-in themes + TOML user themes, contrast-safe rendering                |
+| `gtw/src/footer.rs`        | Modular footer: 14 module types, 3 built-in presets, TOML user presets        |
+| `gtw/src/picker.rs`        | Picker overlay manager: LIFO stack of 15 picker types                         |
+| `gtw/src/cli.rs`           | CLI command definitions (30+ subcommands via clap)                            |
+| `gtw/src/shared/ipc.rs`    | IPC protocol: wire format, 68 typed commands, 30+ events                      |
+| `gtw/src/shared/state.rs`  | DaemonState, EQ presets (16), easing functions (7)                            |
+| `gtw/src/shared/client.rs` | Async IPC client: reconnection, clock estimation, typed API                   |
+| `gtw/src/audio/mixer.rs`   | Audio mixer: dual-player crossfade, decode threads, ring buffer               |
+| `gtw/src/audio/eq.rs`      | 15-band parametric EQ (fundsp) + stereo reverb                                |
+| `gtwd/src/daemon/mod.rs`   | Daemon, DaemonInner, Cmd: tokio event loop, client handling, command dispatch  |
+| `gtwd/src/providers/`      | One directory per integration: clients, artwork, lyrics, streaming            |
+| `gtwd/src/cover.rs`        | Shared cover cache (LRU + on-disk), keyed by artist/album or by URL           |
+| `gtwd/src/library.rs`      | SQLite library: tracks, playlists, metadata extraction, M3U                   |
 
 ## Manpage generation
 
@@ -215,25 +215,25 @@ The generation script (`scripts/build/manpages.sh`) generates manpages from `doc
 Every release produces a `.tar.gz` per platform:
 
 ```
-gtm-{platform}/
-  bin/gtm
-  bin/gtmd
-  man/man1/gtm.1
-  man/man1/gtmd.1
-  man/man1/gtmd-ipc.1
-  completions/gtm.bash
-  completions/_gtm        (zsh)
-  completions/gtm.fish
-  completions/gtm.ps1
-  completions/gtm.elv
-  completions/gtmd.bash
-  completions/_gtmd
-  completions/gtmd.fish
-  completions/gtmd.ps1
-  completions/gtmd.elv
-  systemd/gtmd.service
-  desktop/gtm.desktop
-  icons/gtm.svg
+gtw-{platform}/
+  bin/gtw
+  bin/gtwd
+  man/man1/gtw.1
+  man/man1/gtwd.1
+  man/man1/gtwd-ipc.1
+  completions/gtw.bash
+  completions/_gtw        (zsh)
+  completions/gtw.fish
+  completions/gtw.ps1
+  completions/gtw.elv
+  completions/gtwd.bash
+  completions/_gtwd
+  completions/gtwd.fish
+  completions/gtwd.ps1
+  completions/gtwd.elv
+  systemd/gtwd.service
+  desktop/gtw.desktop
+  icons/gtw.svg
   LICENSE
 ```
 
@@ -261,17 +261,17 @@ This guarantees compatibility with Debian 12 (bookworm) and newer.
 
 ## Crate layout
 
-The player is a single crate (`gtm`) whose subsystems live as module trees so
+The player is a single crate (`gtw`) whose subsystems live as module trees so
 you can tweak just the component you care about:
 
 | Module | Description |
 |---|---|
-| `gtm::shared` | Shared types, IPC protocol, state machine, `DaemonClient` |
-| `gtm::audio` | Audio playback backend (rodio + symphonia and fundsp) |
-| `gtm::gtmd` | Daemon: manages queue, library, IPC socket (bin `gtmd`) |
-| `gtm::mpris` | MPRIS D-Bus interface (mpris feature) |
-| `gtm::*` | Client: TUI and CLI interface (bin `gtm`, tui feature) |
-| `gtm/build.rs` | Build script: embeds git SHA, stamps feature env, reports the linker in use |
+| `gtw::shared` | Shared types, IPC protocol, state machine, `DaemonClient` |
+| `gtw::audio` | Audio playback backend (rodio + symphonia and fundsp) |
+| `gtw::gtwd` | Daemon: manages queue, library, IPC socket (bin `gtwd`) |
+| `gtw::mpris` | MPRIS D-Bus interface (mpris feature) |
+| `gtw::*` | Client: TUI and CLI interface (bin `gtw`, tui feature) |
+| `gtw/build.rs` | Build script: embeds git SHA, stamps feature env, reports the linker in use |
 
 Every change must pass all three before it is mergeable:
 

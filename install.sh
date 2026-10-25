@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# gtm installer — see https://gtmd.dev
+# gtw installer — see https://gtwd.dev
 #
 # Usage:
-#   curl -fsSL https://gtmd.dev/install.sh | bash
+#   curl -fsSL https://gtwd.dev/install.sh | bash
 #   install.sh                        # download and install the release for this system
 #   install.sh --version 0.2.83       # pin a specific release
 #   install.sh --nightly              # install the latest nightly prerelease
 #   install.sh --prefix ~/.local      # install under a custom prefix
 #
-# When run from inside a gtm release archive (bin/gtm + bin/gtmd sit next to
+# When run from inside a gtw release archive (bin/gtw + bin/gtwd sit next to
 # this script) the same file installs the bundled assets directly. The
 # standalone form is a thin bootstrap: it downloads the per-platform archive,
 # extracts it, and installs from it — using itself, not the copy inside the
@@ -24,7 +24,7 @@
 
 set -euo pipefail
 
-REPO="prjctimg/gtm"
+REPO="prjctimg/gtw"
 
 NC='\033[0m'
 MUTED='\033[0;2m'
@@ -34,7 +34,7 @@ BOLD='\033[1m'
 
 usage() {
   cat <<EOF
-gtm installer — https://github.com/${REPO}
+gtw installer — https://github.com/${REPO}
 
 Usage: install.sh [options]
 
@@ -43,13 +43,13 @@ Options:
   -v, --version <ver>   Install a specific version (e.g. 0.2.83)
       --nightly         Install the latest nightly prerelease
   -p, --prefix <dir>    Install prefix for the tarball (default: \$HOME/.local)
-  -y, --yes             Non-interactive: never prompt (e.g. to enable gtmd)
+  -y, --yes             Non-interactive: never prompt (e.g. to enable gtwd)
 
 When run from inside a release archive this file installs the bundled
 binaries, man pages, completions, systemd unit, desktop entry and icon.
 
 Examples:
-  curl -fsSL https://gtmd.dev/install.sh | bash
+  curl -fsSL https://gtwd.dev/install.sh | bash
   install.sh --version 0.2.83
   install.sh --prefix /usr/local
 EOF
@@ -259,12 +259,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Detect whether this copy lives inside a release archive (bin/gtm + bin/gtmd
+# Detect whether this copy lives inside a release archive (bin/gtw + bin/gtwd
 # sit next to it). When piped through `curl | bash` the script path cannot be
 # resolved and we always take the bootstrap path.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd 2>/dev/null || true)"
 IN_ARCHIVE=0
-if [ -n "${SCRIPT_DIR}" ] && [ -f "${SCRIPT_DIR}/bin/gtm" ] && [ -f "${SCRIPT_DIR}/bin/gtmd" ]; then
+if [ -n "${SCRIPT_DIR}" ] && [ -f "${SCRIPT_DIR}/bin/gtw" ] && [ -f "${SCRIPT_DIR}/bin/gtwd" ]; then
   IN_ARCHIVE=1
 fi
 
@@ -399,7 +399,7 @@ bootstrap_install() {
     info "latest stable: v${VERSION}"
   fi
 
-  local archive_name="gtm-${PLATFORM}.tar.gz"
+  local archive_name="gtw-${PLATFORM}.tar.gz"
   stage "🔎 resolving release assets"
   if [ "${CHANNEL}" = "nightly" ]; then
     # Resolve strictly against the published nightly so a draft (mid-build)
@@ -443,9 +443,9 @@ bootstrap_install() {
   if [ "${CHANNEL}" = "nightly" ]; then
     # Nightly releases are named `<version>+<short sha>+nightly`.
     sha="$(printf '%s' "${RELEASE_NAME}" | sed -n 's/.*+\([0-9a-f]\{7,\}\)+.*/\1/p')"
-    label="gtm (nightly at ${sha:-unidentified build})"
+    label="gtw (nightly at ${sha:-unidentified build})"
   else
-    label="gtm (${tag#v})"
+    label="gtw (${tag#v})"
   fi
 
   # Script-scope on purpose (no `local`): the EXIT trap must still read it
@@ -469,7 +469,7 @@ bootstrap_install() {
   fi
   # No label here: the line above already named the build, and repeating the
   # commit hash on success says nothing the reader does not have.
-  ok "downloaded gtm"
+  ok "downloaded gtw"
 
   # Announced because extracting a multi-megabyte archive is not instant and
   # used to print nothing while it happened — a gap between two ✔ lines with
@@ -540,13 +540,13 @@ install_from_archive() {
   fi
 
   # ── Binaries ────────────────────────────────────────────────────────────────
-  if [ ! -d "bin" ] || [ ! -f "bin/gtm" ] || [ ! -f "bin/gtmd" ]; then
+  if [ ! -d "bin" ] || [ ! -f "bin/gtw" ] || [ ! -f "bin/gtwd" ]; then
     die "archive is missing its bin/ assets"
   fi
   stage "📦 binaries"
   if mkdir -p "${bindir}" \
-    && install -m 0755 "bin/gtm" "${bindir}/gtm" \
-    && install -m 0755 "bin/gtmd" "${bindir}/gtmd"; then
+    && install -m 0755 "bin/gtw" "${bindir}/gtw" \
+    && install -m 0755 "bin/gtwd" "${bindir}/gtwd"; then
     stage_ok
   else
     stage_fail
@@ -577,11 +577,11 @@ install_from_archive() {
 
   # ── systemd user unit ───────────────────────────────────────────────────────
   local systemd_unit=""
-  if [ "${OS}" = "linux" ] && [ -f "systemd/gtmd.service" ]; then
+  if [ "${OS}" = "linux" ] && [ -f "systemd/gtwd.service" ]; then
     stage "⚙️  systemd user unit"
     mkdir -p "${systemd_dir}"
-    if install -m 0644 "systemd/gtmd.service" "${systemd_dir}/gtmd.service"; then
-      systemd_unit="${systemd_dir}/gtmd.service"
+    if install -m 0644 "systemd/gtwd.service" "${systemd_dir}/gtwd.service"; then
+      systemd_unit="${systemd_dir}/gtwd.service"
       stage_ok
     else
       stage_fail
@@ -590,20 +590,20 @@ install_from_archive() {
   fi
 
   # ── Desktop entry + icon ────────────────────────────────────────────────────
-  if [ -f "desktop/gtm.desktop" ]; then
+  if [ -f "desktop/gtw.desktop" ]; then
     stage "🖥️  desktop entry"
     mkdir -p "${applications_dir}"
-    if install -m 0644 "desktop/gtm.desktop" "${applications_dir}/gtm.desktop"; then
+    if install -m 0644 "desktop/gtw.desktop" "${applications_dir}/gtw.desktop"; then
       stage_ok
     else
       stage_fail
       die "could not install the desktop entry"
     fi
   fi
-  if [ -f "icons/gtm.svg" ]; then
+  if [ -f "icons/gtw.svg" ]; then
     stage "🎨 icon"
     mkdir -p "${icons_dir}"
-    if install -m 0644 "icons/gtm.svg" "${icons_dir}/gtm.svg"; then
+    if install -m 0644 "icons/gtw.svg" "${icons_dir}/gtw.svg"; then
       stage_ok
     else
       stage_fail
@@ -618,7 +618,7 @@ install_from_archive() {
   if [ -n "${systemd_unit}" ] && [ "${ASSUME_YES}" != 1 ] && [ -t 0 ] \
     && command -v systemctl >/dev/null 2>&1; then
     local reply=""
-    printf "${BOLD}Enable and start the gtm daemon now? [y/N] ${NC}" >&2
+    printf "${BOLD}Enable and start the gtw daemon now? [y/N] ${NC}" >&2
     read -r reply || reply=""
     case "${reply}" in
       [yY] | [yY][eE][sS])
@@ -630,17 +630,17 @@ install_from_archive() {
         # here and announced, so the worst case is a clear message rather than
         # a silence. `timeout` is used only when present; the systemd block is
         # Linux-only but the tool is not always installed.
-        stage "⚙️  enabling and starting gtmd (up to 30s)"
-        local systemctl_enable=(systemctl --user enable --now gtmd)
+        stage "⚙️  enabling and starting gtwd (up to 30s)"
+        local systemctl_enable=(systemctl --user enable --now gtwd)
         if command -v timeout >/dev/null 2>&1; then
-          systemctl_enable=(timeout --kill-after=5 30 systemctl --user enable --now gtmd)
+          systemctl_enable=(timeout --kill-after=5 30 systemctl --user enable --now gtwd)
         fi
         if "${systemctl_enable[@]}" 2>/dev/null; then
           stage_ok
-          ok "gtmd enabled and started"
+          ok "gtwd enabled and started"
         else
           stage_fail
-          fail "could not enable gtmd — start it yourself with: systemctl --user enable --now gtmd"
+          fail "could not enable gtwd — start it yourself with: systemctl --user enable --now gtwd"
         fi
         ;;
       *) ;;
@@ -653,7 +653,7 @@ install_from_archive() {
     # bash: ~/.bashrc
     if [ -f "${HOME}/.bashrc" ] && ! grep -q "export PATH=.*${bindir//\//\\/}" "${HOME}/.bashrc" 2>/dev/null; then
       echo "" >> "${HOME}/.bashrc"
-      echo "# Added by gtm installer" >> "${HOME}/.bashrc"
+      echo "# Added by gtw installer" >> "${HOME}/.bashrc"
       echo "export PATH=\"${bindir}:\$PATH\"" >> "${HOME}/.bashrc"
       ok "added PATH to ~/.bashrc"
     fi
@@ -661,7 +661,7 @@ install_from_archive() {
     # zsh: ~/.zshrc
     if [ -f "${HOME}/.zshrc" ] && ! grep -q "export PATH=.*${bindir//\//\\/}" "${HOME}/.zshrc" 2>/dev/null; then
       echo "" >> "${HOME}/.zshrc"
-      echo "# Added by gtm installer" >> "${HOME}/.zshrc"
+      echo "# Added by gtw installer" >> "${HOME}/.zshrc"
       echo "export PATH=\"${bindir}:\$PATH\"" >> "${HOME}/.zshrc"
       ok "added PATH to ~/.zshrc"
     fi
@@ -670,12 +670,12 @@ install_from_archive() {
     local fish_config="${HOME}/.config/fish/config.fish"
     if [ -f "${fish_config}" ] && ! grep -q "fish_add_path ${bindir//\//\\/}" "${fish_config}" 2>/dev/null; then
       echo "" >> "${fish_config}"
-      echo "# Added by gtm installer" >> "${fish_config}"
+      echo "# Added by gtw installer" >> "${fish_config}"
       echo "fish_add_path ${bindir}" >> "${fish_config}"
       ok "added PATH to ~/.config/fish/config.fish"
     elif [ ! -f "${fish_config}" ]; then
       mkdir -p "${HOME}/.config/fish"
-      echo "# Added by gtm installer" > "${fish_config}"
+      echo "# Added by gtw installer" > "${fish_config}"
       echo "fish_add_path ${bindir}" >> "${fish_config}"
       ok "added PATH to ~/.config/fish/config.fish"
     fi
@@ -703,23 +703,23 @@ install_completions() {
     [ -f "${f}" ] || continue
     base="$(basename "${f}")"
     case "${base}" in
-      gtm.bash | gtmd.bash)
+      gtw.bash | gtwd.bash)
         mkdir -p "${bash_comp_dir}" || return 1
         install -m 0644 "${f}" "${bash_comp_dir}/${base%.bash}" || return 1
         ;;
-      _gtm | _gtmd)
+      _gtw | _gtwd)
         mkdir -p "${zsh_comp_dir}" || return 1
         install -m 0644 "${f}" "${zsh_comp_dir}/${base}" || return 1
         ;;
-      gtm.fish | gtmd.fish)
+      gtw.fish | gtwd.fish)
         mkdir -p "${fish_comp_dir}" || return 1
         install -m 0644 "${f}" "${fish_comp_dir}/${base}" || return 1
         ;;
-      gtm.elv | gtmd.elv)
+      gtw.elv | gtwd.elv)
         mkdir -p "${elvish_comp_dir}" || return 1
         install -m 0644 "${f}" "${elvish_comp_dir}/${base}" || return 1
         ;;
-      gtm.ps1 | gtmd.ps1)
+      gtw.ps1 | gtwd.ps1)
         mkdir -p "${powershell_comp_dir}" || return 1
         install -m 0644 "${f}" "${powershell_comp_dir}/${base}" || return 1
         ;;
