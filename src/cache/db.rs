@@ -55,7 +55,20 @@ impl Cache {
             );
             CREATE TABLE IF NOT EXISTS bookmarks(
                 title TEXT PRIMARY KEY,
-                added_at INTEGER
+                folder TEXT DEFAULT 'default',
+                added_at INTEGER,
+                pinned INTEGER DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS watchlist(
+                title TEXT PRIMARY KEY,
+                added_at INTEGER,
+                seen INTEGER DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS auth(
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                access_token BLOB,
+                refresh_token BLOB,
+                expires_at INTEGER
             );
             CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(title, body);",
         )?;
@@ -115,14 +128,14 @@ impl Cache {
     }
 
     #[allow(dead_code)]
-    pub fn add_bookmark(&self, title: &str) -> Result<()> {
+    pub fn add_bookmark(&self, title: &str, folder: Option<&str>, pinned: bool) -> Result<()> {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs() as i64;
         self.conn.execute(
-            "INSERT OR IGNORE INTO bookmarks(title, added_at) VALUES(?1,?2)",
-            rusqlite::params![title, now],
+            "INSERT OR REPLACE INTO bookmarks(title, folder, added_at, pinned) VALUES(?1,?2,?3,?4)",
+            rusqlite::params![title, folder.unwrap_or("default"), now, if pinned { 1i64 } else { 0i64 }],
         )?;
         Ok(())
     }
@@ -140,7 +153,7 @@ impl Cache {
     pub fn list_bookmarks(&self) -> Result<Vec<String>> {
         let mut stmt = self
             .conn
-            .prepare("SELECT title FROM bookmarks ORDER BY added_at DESC")?;
+            .prepare("SELECT title FROM bookmarks ORDER BY pinned DESC, added_at DESC")?;
         let mut rows = stmt.query([])?;
         let mut out = Vec::new();
         while let Some(row) = rows.next()? {
@@ -149,5 +162,46 @@ impl Cache {
             }
         }
         Ok(out)
+    }
+
+    #[allow(dead_code)]
+    pub fn add_to_watchlist(&self, title: &str) -> Result<()> {
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() as i64;
+        self.conn.execute("INSERT OR IGNORE INTO watchlist(title, added_at, seen) VALUES(?1,?2,0)", rusqlite::params![title, now])?;
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub fn remove_from_watchlist(&self, title: &str) -> Result<()> {
+        self.conn.execute("DELETE FROM watchlist WHERE title = ?1", rusqlite::params![title])?;
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub fn list_watchlist(&self) -> Result<Vec<String>> {
+        let mut stmt = self.conn.prepare("SELECT title FROM watchlist ORDER BY added_at DESC")?;
+        let mut rows = stmt.query([])?;
+        let mut out = Vec::new();
+        while let Some(row) = rows.next()? {
+            if let Ok(t) = row.get::<_, String>(0) {
+                out.push(t);
+            }
+        }
+        Ok(out)
+    }
+
+    #[allow(dead_code)]
+    pub fn save_auth(&self, access: &[u8], refresh: Option<&[u8]>, expires_at: i64) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO auth(id, access_token, refresh_token, expires_at) VALUES(1,?1,?2,?3)",
+            rusqlite::params![access, refresh, expires_at],
+        )?;
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub fn clear_auth(&self) -> Result<()> {
+        self.conn.execute("DELETE FROM auth WHERE id=1", [])?;
+        Ok(())
     }
 }
