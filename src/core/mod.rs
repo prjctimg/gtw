@@ -2,6 +2,7 @@ pub mod activity;
 pub mod config;
 pub mod ids;
 pub mod loadable;
+pub mod model;
 pub mod msg;
 pub mod state;
 pub mod theme;
@@ -14,6 +15,8 @@ pub use config::*;
 pub use ids::*;
 #[allow(unused_imports)]
 pub use loadable::*;
+#[allow(unused_imports)]
+pub use model::*;
 #[allow(unused_imports)]
 pub use msg::*;
 #[allow(unused_imports)]

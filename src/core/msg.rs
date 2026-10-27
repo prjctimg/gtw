@@ -1,83 +1,200 @@
-use crate::core::{LoadError, RequestId, Source, TabId};
-#[allow(dead_code)]
+//! Background-to-UI message and command protocol.
+//! Video-control variants are shared with the Media Lab and future M3 UI.
+#![allow(dead_code)]
+use std::sync::Arc;
+
+use chrono::NaiveDate;
+use image::RgbaImage;
+
+use crate::core::{
+    Article, Bookmark, Feed, HistoryEntry, LibrarySnapshot, LoadError, MediaKind, ReadingList,
+    RequestId, SearchHit, TabId,
+};
+use crate::media::{AudioData, DecodedMedia};
+
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum Msg {
-    // Input
-    Quit,
-    Resize(u16, u16),
     Tick,
+    Resize(u16, u16),
+    Quit,
 
-    // Navigation
-    OpenArticle {
-        title: String,
-        tab: Option<TabId>,
+    FeedLoaded {
+        req: RequestId,
+        date: NaiveDate,
+        result: Result<Feed, LoadError>,
     },
-    GoBack,
-    GoForward,
-    SwitchTab(TabId),
-    CloseTab(TabId),
-
-    // Commands results
     ArticleLoaded {
         req: RequestId,
         tab: TabId,
         result: Result<Article, LoadError>,
-        source: Source,
     },
     SearchResults {
         req: RequestId,
-        results: Result<Vec<SearchHit>, LoadError>,
+        query: String,
+        result: Result<Vec<SearchHit>, LoadError>,
     },
-    ImageReady {
-        req: RequestId,
-        data: Vec<u8>,
-    },
-    ImageFailed {
-        req: RequestId,
-        err: LoadError,
+    LocalSearchResults {
+        query: String,
+        result: Result<Vec<SearchHit>, LoadError>,
     },
 
-    // UI
-    ThemeNext,
-    ThemePrev,
-    ShowThemePicker,
-    ShowActivityCenter,
+    BookmarksLoaded(Result<Vec<Bookmark>, LoadError>),
+    HistoryLoaded(Result<Vec<HistoryEntry>, LoadError>),
+    ListsLoaded(Result<Vec<ReadingList>, LoadError>),
+    LibraryLoaded(Result<LibrarySnapshot, LoadError>),
+    ListItemsLoaded {
+        list_id: i64,
+        result: Result<Vec<String>, LoadError>,
+    },
+    ListCreated(Result<ReadingList, LoadError>),
+    ListDeleted {
+        list_id: i64,
+        result: Result<(), LoadError>,
+    },
+    ArticleAddedToList {
+        list_id: i64,
+        title: String,
+        result: Result<(), LoadError>,
+    },
+    ArticleRemovedFromList {
+        list_id: i64,
+        title: String,
+        result: Result<(), LoadError>,
+    },
+    BookmarkStateLoaded {
+        title: String,
+        bookmarked: bool,
+    },
+    BookmarkToggled {
+        title: String,
+        bookmarked: bool,
+        result: Result<(), LoadError>,
+    },
+    CachePurged(Result<u64, LoadError>),
 
-    // Effects
-    EffectDone,
+    MediaLoaded {
+        key: String,
+        result: Result<DecodedMedia, LoadError>,
+    },
+    MathRendered {
+        key: String,
+        result: Result<DecodedMedia, LoadError>,
+    },
+    AudioLoaded {
+        key: String,
+        result: Result<AudioData, LoadError>,
+    },
+    VideoFrame {
+        key: String,
+        index: u32,
+        total: u32,
+        frame: Arc<RgbaImage>,
+        position: f64,
+    },
+    VideoLoaded {
+        key: String,
+        total: u32,
+        duration: f64,
+    },
+    VideoFailed {
+        key: String,
+        error: LoadError,
+    },
+    VideoStateChanged {
+        key: String,
+        playing: bool,
+        position: f64,
+        volume: f32,
+    },
+
+    Toast {
+        text: String,
+        error: bool,
+    },
+    OpenUrlResult {
+        url: String,
+        result: Result<(), LoadError>,
+    },
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub struct Article {
-    pub title: String,
-    pub body_html: String,
-    pub revision: Option<u64>,
-}
-
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub struct SearchHit {
-    pub title: String,
-    pub snippet: String,
-}
-
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum Cmd {
-    FetchArticle {
+    LoadFeed {
+        req: RequestId,
+        date: NaiveDate,
+        refresh: bool,
+    },
+    LoadArticle {
         req: RequestId,
         tab: TabId,
         title: String,
+        refresh: bool,
     },
     Search {
         req: RequestId,
         query: String,
     },
-    FetchImage {
-        req: RequestId,
+    SearchLocal {
+        query: String,
+    },
+    LoadBookmarks,
+    LoadHistory,
+    LoadLists,
+    LoadLibrary,
+    LoadListItems {
+        list_id: i64,
+    },
+    CreateList {
+        name: String,
+    },
+    DeleteList {
+        list_id: i64,
+    },
+    AddToList {
+        list_id: i64,
+        title: String,
+    },
+    RemoveFromList {
+        list_id: i64,
+        title: String,
+    },
+    ToggleBookmark {
+        title: String,
+    },
+    LoadBookmarkState {
+        title: String,
+    },
+    LoadMedia {
+        key: String,
+        url: String,
+        kind: MediaKind,
+    },
+    RenderMath {
+        key: String,
+        tex: String,
+        light: bool,
+    },
+    LoadAudio {
+        key: String,
+        url: String,
+        title: String,
+    },
+    LoadVideo {
+        key: String,
+        url: String,
+        title: String,
+    },
+    VideoControl(VideoControl),
+    PurgeCache,
+    OpenUrl {
         url: String,
     },
-    Cancel(RequestId),
+}
+
+#[derive(Debug, Clone)]
+pub enum VideoControl {
+    PlayPause,
+    Seek(f64),
+    Stop,
+    Volume(f32),
 }

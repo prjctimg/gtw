@@ -1,292 +1,98 @@
 # Contributing
 
-Thanks for considering contributing to `gtw`, this is a friendly, hobby
-project: feedback, bug reports are welcome. Currently the project is still new so PRs are restricted for now, these will be unlocked after the first major (`v1`).
+Thanks for trying `gtw`. It is a small hobby project; bug reports and focused
+patches are welcome. PRs are limited while the project settles before `v1`, but
+you can always open an issue with a reproduction.
 
-## Build from source
+## Build
 
-Prerequisites:
+Requirements:
 
-- **Rust 1.81+**: install via [rustup](https://rustup.rs)
-- **ALSA development headers**: `libasound2-dev` on Debian/Ubuntu
-  (`brew install alsa-lib` on macOS, optional for Linux-only backends)
-- D-Bus development library (for the optional MPRIS feature:)
+- Rust **1.90+** with edition 2024 support
+- `pkg-config`, a C toolchain, and CMake (for vendored/bundled native crates)
+- ALSA headers on Linux: `libasound2-dev` (Debian/Ubuntu), `alsa-lib` (Arch),
+  `alsa-lib-dev` (Alpine). macOS uses CoreAudio.
+- On Termux: `pkg install rust clang pkg-config cmake make`
 
 ```bash
 cargo build --release
-sudo make install
+./target/release/gtw --doctor
 ```
 
-### Termux (native build on-device)
+The release archive installer can be tested locally without publishing:
 
 ```bash
-pkg install rust clang pkg-config pulseaudio make
-# optional: termux-setup-storage for /sdcard/Music access
-
-# build.rs auto-detects Termux; `make termux` (or `make deb-termux` for a
-# .deb) enables the PulseAudio backend automatically.
-make termux
-
-# manual equivalent for a plain build:
-#   cargo build --release --features pulseaudio
+./scripts/build/manpages.sh artifacts
+GTW_BIN=target/release/gtw ./scripts/build/completions.sh "$(pwd)/artifacts"
 ```
 
-At runtime `gtwd` auto-selects the PulseAudio backend on Termux and
-auto-starts the server, so no `pulseaudio --start` step is required.
+## Quality gates
 
-Cross-compiling from Linux still uses `cargo-ndk` (see `make termux`):
-
-```bash
-cargo install cargo-ndk
-# NDK r27b via nttld/setup-ndk@v1 or $ANDROID_NDK_HOME
-make termux          # CARGO_TARGET_*_LINKER is injected by cargo-ndk
-make termux-elf
-```
-
-### Release Profile
-
-```toml
-[profile.release]
-lto = "thin"
-strip = "symbols"
-```
-
-## Testing
-
-```bash
-# Run all tests
-cargo test
-
-# Run tests for a specific module's integration tests (single crate)
-cargo test -p gtw
-
-# Run inline tests only (no integration tests)
-cargo test --lib -p gtw
-```
-
-## Linting & Formatting
-
-```bash
-# Clippy lints
-cargo clippy
-
-# Format check
-cargo fmt --check
-
-# Auto-format
-cargo fmt
-```
-
-## Project Structure
-
-The codebase is a single crate (`gtw`) with the shared core, audio backend,
-MPRIS integration, and daemon subsystems living as module trees under
-`gtw/src/`. Two binaries ship from `gtw/`: `gtw` (TUI, `tui` feature) and
-`gtwd` (daemon, always built).
-
-```
-gtw/
-├── gtw/                    The single crate — client, daemon, core, audio, MPRIS
-│   ├── Cargo.toml          Merged dependencies, features, [[bin]] targets
-│   ├── build.rs            Build-time env (VERGEN, Termux warning, mold)
-│   ├── src/
-│   │   ├── lib.rs          Module declarations, re-exports
-│   │   ├── main.rs         gtw CLI/TUI entry point
-│   │   ├── daemon_main.rs  gtwd daemon binary entry point
-│   │   ├── app.rs          App state machine (~5000 lines)
-│   │   ├── ui.rs           TUI rendering (~4400 lines)
-│   │   ├── keymap.rs       Context-aware keybinding dispatch
-│   │   ├── theme.rs        16 built-in themes + TOML user themes
-│   │   ├── footer.rs       Modular footer bar system
-│   │   ├── picker.rs       Picker overlay manager (LIFO stack)
-│   │   ├── cli.rs          CLI command definitions (clap)
-│   │   ├── visualizer.rs   Audio visualizer (5 presets)
-│   │   ├── progress.rs     Progress bar (4 styles)
-│   │   ├── providers/      Per-integration client code (see below)
-│   │   │   ├── spotify/    Spotify: types, actions, pickers, cover, lyrics
-│   │   │   ├── radio/      Radio Browser: types, actions, picker
-│   │   │   ├── podcast/    Podcast feeds: types, actions, picker
-│   │   │   ├── charts/     Top charts: model, tree actions
-│   │   │   ├── lastfm/     Last.fm: status, love, scrobble toggle
-│   │   │   └── yt/         YouTube: host configuration
-│   │   ├── shared/         Core: IPC protocol, state machine, DaemonClient
-│   │   │   ├── mod.rs      Module declarations, re-exports
-│   │   │   ├── ipc.rs      68 typed commands, 30+ events, wire format
-│   │   │   ├── state.rs    DaemonState, EqPreset, Easing, LoudnessMode
-│   │   │   ├── client.rs   Async IPC client, clock estimation, reconnect
-│   │   │   ├── fsm.rs      State machine transitions, apply_event
-│   │   │   ├── track.rs    TrackInfo, Playlist, LrcData, YTSearchResult
-│   │   │   ├── wire.rs     MessagePack encode/decode for pulse socket
-│   │   │   ├── paths.rs    Termux-aware path resolution
-│   │   │   ├── log.rs      File logger
-│   │   │   ├── validate.rs Validated constructors
-│   │   │   └── tripwire.rs Fail-point injection (debug-fail feature)
-│   │   ├── audio/          Audio playback backends
-│   │   │   ├── mod.rs      Module declarations
-│   │   │   ├── mixer.rs    AudioMixer: dual-player crossfade, decode threads
-│   │   │   ├── eq.rs       15-band parametric EQ (fundsp), reverb
-│   │   │   ├── backend.rs  AudioEvent, AudioError types
-│   │   │   ├── buffer.rs   RingBufferSource (lock-free)
-│   │   │   ├── decoder.rs  DecodeThread (symphonia + ring buffer)
-│   │   │   ├── symphonia.rs SymphoniaSource (file decoding)
-│   │   │   ├── silent.rs   NullMixer (no-op backend)
-│   │   │   └── pulse.rs    PulseAudioMixer (pulseaudio feature)
-│   │   ├── mpris/          MPRIS D-Bus integration (mpris feature)
-│   │   │   └── mod.rs
-│   │   └── app/            Application state machine
-│   │       ├── mod.rs      App struct, IpcResult, shared import hub
-│   │       ├── keys.rs     Keybinding build and the full key handler
-│   │       ├── run.rs      Event loop, IPC drain, debounce
-│   │       ├── cover.rs    Cross-provider cover routing
-│   │       └── lyrics.rs   Cross-provider lyrics routing
-│   └── tests/              Integration tests (core, playback, opus)
-├── gtwd/                   Daemon crate (gtwd binary, core playback engine)
-│   └── src/
-│       ├── lib.rs          Module declarations, re-exports
-│       ├── daemon/         Event loop, client handling, command dispatch
-│       │   ├── mod.rs      Daemon, DaemonInner, Cmd, command dispatch
-│       │   ├── cover.rs    Cover routing across providers
-│       │   └── lyrics.rs   Lyrics routing
-│       ├── providers/      Per-integration daemon code (mirrors gtw/src/providers)
-│       │   ├── spotify/    Web API, librespot bridge, artwork, lyrics, IPC
-│       │   ├── radio/      Radio Browser client, station tracklists
-│       │   ├── podcast/    Feed storage, RSS/Atom parsing
-│       │   ├── charts/     Chart registry and providers
-│       │   ├── lrclib/     Lyrics provider, cache, LRC/SRT parsers
-│       │   ├── deezer/     Deezer metadata and cover lookups
-│       │   ├── musicbrainz/ Catalogue and Cover Art Archive lookups
-│       │   ├── lastfm/     Scrobble, love, now-playing
-│       │   └── youtube/    Search and download via innertube-rs (youtube feature)
-│       ├── cover.rs        Shared cover cache (LRU + on-disk, keyed by URL)
-│       ├── library.rs      SQLite library (tracks, playlists, metadata)
-│       ├── queue.rs        Queue helpers (dual-list, path expansion)
-│       ├── config.rs       DaemonConfig (paths, settings)
-│       ├── tags.rs         Audio tag writing (lofty)
-│       └── cleaner.rs      YouTube title/filename cleaning
-├── docs/man/               Manpage sources
-├── scripts/build/          Build scripts (packaging, manpages, verification)
-├── dist/                   Packaging files (systemd service, desktop entry, termux/rpm/arch)
-├── assets/                 Icons and artwork
-├── Formula/                Homebrew formula
-├── artifacts/              Generated manpages and completions
-├── Makefile                Build targets (release, test, man, completions, deb, rpm)
-├── Cargo.toml              Workspace root (members: gtw, gtwd)
-└── flake.nix               Nix flake
-```
-
-## Key Source Files
-
-| File                       | Purpose                                                                       |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `gtw/src/app/mod.rs`       | Application state machine: input handling, IPC dispatch, crossfade, preferences |
-| `gtw/src/app/cover.rs`     | Cross-provider cover routing: which surface fetches what, stale-reply guards |
-| `gtw/src/app/lyrics.rs`    | Cross-provider lyrics routing and the time-sync highlight                    |
-| `gtw/src/providers/`       | One directory per integration: wire types, state, actions, pickers            |
-| `gtw/src/ui/chrome.rs`     | TUI rendering: layout, panes, list viewports, overlays                        |
-| `gtw/src/ui/pickers/`      | Picker overlay rendering, dispatched from `PickerId`                          |
-| `gtw/src/keymap.rs`        | Context-aware keybinding dispatch (Global, Normal, List)                      |
-| `gtw/src/theme.rs`         | 16 built-in themes + TOML user themes, contrast-safe rendering                |
-| `gtw/src/footer.rs`        | Modular footer: 14 module types, 3 built-in presets, TOML user presets        |
-| `gtw/src/picker.rs`        | Picker overlay manager: LIFO stack of 15 picker types                         |
-| `gtw/src/cli.rs`           | CLI command definitions (30+ subcommands via clap)                            |
-| `gtw/src/shared/ipc.rs`    | IPC protocol: wire format, 68 typed commands, 30+ events                      |
-| `gtw/src/shared/state.rs`  | DaemonState, EQ presets (16), easing functions (7)                            |
-| `gtw/src/shared/client.rs` | Async IPC client: reconnection, clock estimation, typed API                   |
-| `gtw/src/audio/mixer.rs`   | Audio mixer: dual-player crossfade, decode threads, ring buffer               |
-| `gtw/src/audio/eq.rs`      | 15-band parametric EQ (fundsp) + stereo reverb                                |
-| `gtwd/src/daemon/mod.rs`   | Daemon, DaemonInner, Cmd: tokio event loop, client handling, command dispatch  |
-| `gtwd/src/providers/`      | One directory per integration: clients, artwork, lyrics, streaming            |
-| `gtwd/src/cover.rs`        | Shared cover cache (LRU + on-disk), keyed by artist/album or by URL           |
-| `gtwd/src/library.rs`      | SQLite library: tracks, playlists, metadata extraction, M3U                   |
-
-## Manpage generation
-
-Manpages are generated from Markdown source in `docs/man/`:
-
-```bash
-# Generate manpages
-make man
-
-
-```
-
-The generation script (`scripts/build/manpages.sh`) generates manpages from `docs/man/`.
-
-Every release produces a `.tar.gz` per platform:
-
-```
-gtw-{platform}/
-  bin/gtw
-  bin/gtwd
-  man/man1/gtw.1
-  man/man1/gtwd.1
-  man/man1/gtwd-ipc.1
-  completions/gtw.bash
-  completions/_gtw        (zsh)
-  completions/gtw.fish
-  completions/gtw.ps1
-  completions/gtw.elv
-  completions/gtwd.bash
-  completions/_gtwd
-  completions/gtwd.fish
-  completions/gtwd.ps1
-  completions/gtwd.elv
-  systemd/gtwd.service
-  desktop/gtw.desktop
-  icons/gtw.svg
-  LICENSE
-```
-
-### Platform Targets
-
-| Platform | Container | Native Packages |
-|----------|-----------|----------------|
-| `x86_64-linux` | `debian:12` | .deb, .rpm, .pkg.tar.zst |
-| `aarch64-linux` | `debian:12` | .deb, .rpm, .pkg.tar.zst |
-| `aarch64-darwin` | — | — |
-| `aarch64-android` | — | .deb (Termux) |
-| `x86_64-linux-musl` | `alpine:3.22` | .apk |
-| `aarch64-linux-musl` | `alpine:3.22` | .apk |
-
-### Debian 12 Compatibility
-
-Linux builds are compiled inside a `debian:12` container with a glibc version check:
-
-```bash
-objdump -T "$bin" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1
-dpkg --compare-versions "${max#GLIBC_}" le 2.36
-```
-
-This guarantees compatibility with Debian 12 (bookworm) and newer.
-
-## Crate layout
-
-The player is a single crate (`gtw`) whose subsystems live as module trees so
-you can tweak just the component you care about:
-
-| Module | Description |
-|---|---|
-| `gtw::shared` | Shared types, IPC protocol, state machine, `DaemonClient` |
-| `gtw::audio` | Audio playback backend (rodio + symphonia and fundsp) |
-| `gtw::gtwd` | Daemon: manages queue, library, IPC socket (bin `gtwd`) |
-| `gtw::mpris` | MPRIS D-Bus interface (mpris feature) |
-| `gtw::*` | Client: TUI and CLI interface (bin `gtw`, tui feature) |
-| `gtw/build.rs` | Build script: embeds git SHA, stamps feature env, reports the linker in use |
-
-Every change must pass all three before it is mergeable:
+All of these must pass before a PR is merged:
 
 ```bash
 cargo fmt --check
-cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test --workspace
+cargo deny check
 ```
 
-> [!note]
->
-> Use [conventional commits](https://www.conventionalcommits.org/):
->
-> ```
-> feat: add titles-only track rows in the library
-> fix: don't cut the track tail during crossfade
-> docs: document install-from-source in the README
-> ```
+Also:
+
+- **No live network in tests.** Use fixtures or the in-module mock data.
+- **No FFmpeg.** No binary, crate, or runtime dependency; video stays with the
+  pure-Rust `zvidlib` pipeline.
+- **Every async surface needs states.** Use `Loadable<T>` and `ActivityCenter`;
+  do not add ad-hoc `loading: bool` fields.
+- **Keep the UI thread non-blocking.** Parsing, layout, fetch, and decoding run
+  off the render loop.
+- **Responsive snapshots.** Add or update a loading-state snapshot in
+  `tests/snapshots/` for every new screen or overlay.
+- **Large articles.** The 500 KB layout/parse responsiveness test must remain
+  under its budget.
+
+Regenerate snapshots only when a UI change is intentional:
+
+```bash
+UPDATE_SNAPSHOTS=1 cargo test snapshot_tests
+```
+
+## Testing media
+
+`gtw --demo-media` opens the Media Lab. It contains every terminal-consumable
+preview path: PNG/JPEG/GIF animation, SVG, syntax-highlighted code, LaTeX,
+audio, and a WebM video. `gtw --doctor` reports the detected terminal graphics
+protocol, multipane/multiplexer state, audio device, and cache health without
+touching the network.
+
+Decode tests use generated fixtures, so they work on headless CI. Pixel output
+and sound require a real terminal/audio device; include the `--doctor` output
+when reporting a preview bug.
+
+## Style
+
+- Rust edition 2024; `rustfmt` defaults.
+- Keep modules aligned with the existing architecture: `api`, `app`, `cache`,
+  `core`, `media`, `render`.
+- Prefer small, typed messages and commands over shared mutable state.
+- Errors should render as a user-visible state with retry/cancel/fallback, not
+  just a log line.
+- Conventional Commits, one behaviour per commit:
+
+```text
+feat(cache): refresh the sliding TTL on article open
+fix(render): wrap wide tables inside the viewport
+test(app): snapshot the offline picker
+docs(readme): document Wikimedia attribution
+```
+
+Do not commit `target/`, cache databases, media downloads, tokens, `.env` files,
+or editor swap files.
+
+## Packaging
+
+Version, man page, and completions are generated from the CLI; do not hand-edit
+them. Release packaging scripts live in `scripts/build/`, with platform
+manifests in `dist/`. The release workflow builds the same matrix as
+`prjctimg/gtm` (Debian 12, Arch, musl/Alpine, RPM, macOS arm64, Termux) and
+publishes SHA-256 checksums alongside every asset.

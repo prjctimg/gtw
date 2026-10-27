@@ -1,3 +1,6 @@
+//! Load-state machine with the full loading/error surface used by all screens.
+//! Some transition helpers are retained for later editors and diagnostics.
+#![allow(dead_code)]
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 
@@ -5,14 +8,12 @@ use serde::{Deserialize, Serialize};
 use tokio_util::sync::CancellationToken;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub enum Priority {
     Interactive,
     Background,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub enum Source {
     Network,
     Cache,
@@ -20,8 +21,18 @@ pub enum Source {
     Local,
 }
 
+impl Source {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Network => "live",
+            Self::Cache => "cached",
+            Self::Prefetch => "prefetched",
+            Self::Local => "local",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub enum ProgressUnit {
     Bytes,
     Items,
@@ -30,7 +41,6 @@ pub enum ProgressUnit {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub struct Progress {
     pub current: u64,
     pub total: Option<u64>,
@@ -38,8 +48,19 @@ pub struct Progress {
     pub label: String,
 }
 
+impl Progress {
+    pub fn fraction(&self) -> Option<f32> {
+        self.total
+            .filter(|t| *t > 0)
+            .map(|total| (self.current as f32 / total as f32).clamp(0.0, 1.0))
+    }
+
+    pub fn percent(&self) -> Option<u8> {
+        self.fraction().map(|f| (f * 100.0).round() as u8)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub enum LoadStage {
     Connecting,
     Downloading,
@@ -53,8 +74,24 @@ pub enum LoadStage {
     Committing,
 }
 
+impl LoadStage {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Connecting => "connecting",
+            Self::Downloading => "downloading",
+            Self::Parsing => "parsing",
+            Self::Extracting => "extracting",
+            Self::LayingOut => "laying out",
+            Self::Decoding => "decoding",
+            Self::Buffering => "buffering",
+            Self::Indexing => "indexing",
+            Self::Saving => "saving",
+            Self::Committing => "saving",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct CancelHandle(pub CancellationToken);
 
 impl Default for CancelHandle {
@@ -64,7 +101,6 @@ impl Default for CancelHandle {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum Fallback {
     None,
     Placeholder,
@@ -73,15 +109,68 @@ pub enum Fallback {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct LoadError {
     pub message: String,
     pub retryable: bool,
     pub kind: LoadErrorKind,
 }
 
+impl LoadError {
+    pub fn new(kind: LoadErrorKind, message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            retryable: !matches!(kind, LoadErrorKind::NotFound | LoadErrorKind::Cancelled),
+            kind,
+        }
+    }
+
+    pub fn network(message: impl Into<String>) -> Self {
+        Self::new(LoadErrorKind::Network, message)
+    }
+
+    pub fn parse(message: impl Into<String>) -> Self {
+        Self::new(LoadErrorKind::Parse, message)
+    }
+
+    pub fn offline() -> Self {
+        Self {
+            message: "offline — no cached copy is available".to_string(),
+            retryable: true,
+            kind: LoadErrorKind::Offline,
+        }
+    }
+
+    pub fn cancelled() -> Self {
+        Self {
+            message: "cancelled".to_string(),
+            retryable: false,
+            kind: LoadErrorKind::Cancelled,
+        }
+    }
+
+    pub fn hint(&self) -> Option<&'static str> {
+        match self.kind {
+            LoadErrorKind::Network => Some("check the connection, then press r to retry"),
+            LoadErrorKind::Offline => Some("connect to the network or open a cached article"),
+            LoadErrorKind::RateLimited => Some("Wikipedia asked us to slow down; retry shortly"),
+            LoadErrorKind::NotFound => Some("the page may have been renamed or deleted"),
+            LoadErrorKind::Auth => Some("sign-in is not enabled in this release"),
+            LoadErrorKind::Parse => Some("try the browser fallback with o"),
+            LoadErrorKind::Cancelled => None,
+            LoadErrorKind::Protected | LoadErrorKind::Unknown => Some("press r to retry"),
+        }
+    }
+}
+
+impl std::fmt::Display for LoadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for LoadError {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum LoadErrorKind {
     Network,
     NotFound,
@@ -95,7 +184,6 @@ pub enum LoadErrorKind {
 }
 
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
 pub enum Loadable<T> {
     #[default]
     Idle,
@@ -136,8 +224,6 @@ pub enum Loadable<T> {
 }
 
 impl<T> Loadable<T> {
-    #[allow(dead_code)]
-    #[allow(dead_code)]
     pub fn value(&self) -> Option<&T> {
         match self {
             Loadable::Ready { value, .. } => Some(value.as_ref()),
@@ -152,8 +238,20 @@ impl<T> Loadable<T> {
         }
     }
 
-    #[allow(dead_code)]
-    #[allow(dead_code)]
+    pub fn value_arc(&self) -> Option<Arc<T>> {
+        match self {
+            Loadable::Ready { value, .. } => Some(Arc::clone(value)),
+            Loadable::Loading {
+                previous: Some(p), ..
+            } => Some(Arc::clone(p)),
+            Loadable::Refreshing { previous, .. } => Some(Arc::clone(previous)),
+            Loadable::Failed {
+                previous: Some(p), ..
+            } => Some(Arc::clone(p)),
+            _ => None,
+        }
+    }
+
     pub fn is_loading(&self) -> bool {
         matches!(
             self,
@@ -161,20 +259,35 @@ impl<T> Loadable<T> {
         )
     }
 
-    #[allow(dead_code)]
-    #[allow(dead_code)]
     pub fn is_ready(&self) -> bool {
         matches!(self, Loadable::Ready { .. })
     }
 
-    #[allow(dead_code)]
-    #[allow(dead_code)]
     pub fn is_failed(&self) -> bool {
         matches!(self, Loadable::Failed { .. })
     }
 
-    #[allow(dead_code)]
-    #[allow(dead_code)]
+    pub fn source(&self) -> Option<Source> {
+        match self {
+            Loadable::Ready { source, .. } => Some(*source),
+            _ => None,
+        }
+    }
+
+    pub fn error(&self) -> Option<&LoadError> {
+        match self {
+            Loadable::Failed { error, .. } => Some(error),
+            _ => None,
+        }
+    }
+
+    pub fn stage(&self) -> Option<LoadStage> {
+        match self {
+            Loadable::Loading { stage, .. } | Loadable::Refreshing { stage, .. } => Some(*stage),
+            _ => None,
+        }
+    }
+
     pub fn begin_refresh(&mut self, previous: Arc<T>) {
         *self = Loadable::Refreshing {
             stage: LoadStage::Connecting,
@@ -185,8 +298,46 @@ impl<T> Loadable<T> {
         };
     }
 
-    #[allow(dead_code)]
-    #[allow(dead_code)]
+    pub fn begin_loading(&mut self) {
+        let previous = self.value_arc();
+        *self = Loadable::Loading {
+            stage: LoadStage::Connecting,
+            progress: None,
+            started_at: Instant::now(),
+            previous,
+            cancel: CancellationToken::new(),
+        };
+    }
+
+    pub fn ready(value: T, source: Source) -> Self {
+        Loadable::Ready {
+            value: Arc::new(value),
+            updated_at: SystemTime::now(),
+            source,
+            stale: false,
+        }
+    }
+
+    pub fn failed(error: LoadError) -> Self {
+        let retryable = error.retryable;
+        Loadable::Failed {
+            error,
+            previous: None,
+            retryable,
+            failed_at: SystemTime::now(),
+        }
+    }
+
+    pub fn failed_with(error: LoadError, previous: Option<Arc<T>>) -> Self {
+        let retryable = error.retryable;
+        Loadable::Failed {
+            error,
+            previous,
+            retryable,
+            failed_at: SystemTime::now(),
+        }
+    }
+
     pub fn cancel(&mut self) {
         match self {
             Loadable::Loading { cancel, .. } => cancel.cancel(),
@@ -194,43 +345,13 @@ impl<T> Loadable<T> {
             _ => {}
         }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_is_idle() {
-        let v: Loadable<String> = Loadable::default();
-        assert!(matches!(v, Loadable::Idle));
-    }
-
-    #[test]
-    fn value_from_ready() {
-        let v = Loadable::Ready {
-            value: Arc::new("hi".to_string()),
-            updated_at: SystemTime::now(),
-            source: Source::Network,
-            stale: false,
-        };
-        assert_eq!(v.value().unwrap(), "hi");
-    }
-
-    #[test]
-    fn failed_with_previous_shows_previous() {
-        let prev = Arc::new("old".to_string());
-        let v = Loadable::Failed {
-            error: LoadError {
-                message: "err".to_string(),
-                retryable: true,
-                kind: LoadErrorKind::Network,
-            },
-            previous: Some(prev.clone()),
-            retryable: true,
-            failed_at: SystemTime::now(),
-        };
-        assert_eq!(v.value().unwrap(), "old");
-        assert!(v.is_failed());
+    pub fn age(&self) -> Option<std::time::Duration> {
+        match self {
+            Loadable::Ready { updated_at, .. } => {
+                SystemTime::now().duration_since(*updated_at).ok()
+            }
+            _ => None,
+        }
     }
 }

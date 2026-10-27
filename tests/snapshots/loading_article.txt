@@ -1,0 +1,30 @@
+ 🬞🬭🬞🬏🬞🬻🬭 🬭 🬞🬏                                                                  ⠋ Terminal emulator
+ 🬬🬭█  █🬞 █🬻🬻▌
+─🬋🬋🬆  🬁🬀 🬁🬀🬂 ─── 1 Terminal emul… × ─────────────── ‹ back  / search  o offline  ? help  a activity
+                    │Terminal emulator
+  ◈ Home  h         │
+                    │· …
+  ★ Saved  b        │
+                    │  ☆ save   ☷ add to list   toc   r refresh   o browser
+  ◷ History  y      │┌ Terminal emulator · ⠋ loading ──────────────────────────────────────────────┐
+                    ││                                                                             │
+  ☷ Reading lists  l││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                  │
+                    ││                                                                             │
+  ▧ Media lab  m    ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                                    │
+                    ││                                                                             │
+  ⚙ Settings  s     ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        │
+                    ││                                                                             │
+  ◑ Themes  p       ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                          │
+                    ││                                                                             │
+                    ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                                             │
+                    ││                                                                             │
+                    ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░              │
+                    ││                                                                             │
+                    ││ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                                 │
+                    ││                                                                             │
+ 0 cached           ││                                                                             │
+ 0 B                ││                                                                             │
+ ◉ online           ││                                                                             │
+                    ││                   Ctrl+C cancel · the UI stays responsive                   │
+                    │└─────────────────────────────────────────────────────────────────────────────┘
+ [j/k] scroll · [B] save · [a] list · [toc] contents · [o] browser · [esc] back ⠋ Terminal emulator

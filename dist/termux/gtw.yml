@@ -1,0 +1,22 @@
+control:
+    Package: gtw
+    Version: 0.1.0
+    Architecture: aarch64
+    Maintainer: prjctimg <prjctimg@outlook.com>
+    Homepage: https://github.com/prjctimg/gtw
+    Description: |2-
+        Wikipedia in the terminal with cached reading and rich media.
+         .
+        gtw renders Wikipedia articles with responsive wrapping, syntax
+        highlighting, inline images, audio and video previews, LaTeX math,
+        a compressed offline cache, bookmarks, history, and reading lists.
+
+files_dir: target/aarch64-linux-android/termux-pkg/files
+deb_dir: .
+
+data_files:
+    bin/gtw:
+        source: bin/gtw
+
+    share/man/man1/gtw.1:
+        source: share/man/man1/gtw.1

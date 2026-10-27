@@ -5,20 +5,13 @@ platform="${1:?platform required}"
 version="${2:?version required}"
 arch="${3:?arch required}"
 
-cd /work
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$repo"
 
 export RUSTFLAGS="-C linker=gcc -C link-arg=-fuse-ld=mold"
 
-if [[ "$(uname -m)" == "aarch64" ]] && command -v pandoc &>/dev/null; then
-    PACMAN_PACKAGES="base-devel rust alsa-lib cmake clang lld mold git libarchive zstd"
-else
-    PACMAN_PACKAGES="base-devel rust pandoc alsa-lib cmake clang lld mold git libarchive zstd"
-fi
+PACMAN_PACKAGES="base-devel rust alsa-lib cmake clang lld mold git libarchive zstd"
 
-# The Arch mirrors are reached by name, so a transient DNS failure — a resolver
-# blip, a mirror rotating its records — reds the whole target even though
-# nothing is wrong with the code. This step is the only network-bound part of the
-# release with no retry, so it gets one, matching the crates.io publish step.
 retry() {
     local what="$1"; shift
     local attempt
@@ -42,54 +35,35 @@ retry "pacman install" pacman -S --noconfirm --needed $PACMAN_PACKAGES
 cargo build --release
 
 ./scripts/build/manpages.sh artifacts
-cargo build --release --quiet
 ./scripts/build/completions.sh "$(pwd)/artifacts"
 
-root="gtm-arch-${arch}"
-mkdir -p release-assets \
-  "$root/bin" "$root/man/man1" "$root/completions" \
-  "$root/systemd" "$root/desktop" "$root/icons"
-cp target/release/gtm "$root/bin/"
-cp target/release/gtmd "$root/bin/"
+root="gtw-arch-${arch}"
+mkdir -p release-assets "$root/bin" "$root/man/man1" "$root/completions"
+cp target/release/gtw "$root/bin/"
 cp artifacts/man/*.1 "$root/man/man1/"
 cp artifacts/completions/* "$root/completions/"
-cp dist/gtmd.service "$root/systemd/"
-cp dist/gtm.desktop "$root/desktop/"
-cp assets/gtm.svg "$root/icons/"
 cp LICENSE "$root/"
 cp install.sh uninstall.sh "$root/"
-tar czf "release-assets/gtm-arch-${arch}.tar.gz" "$root"
+tar czf "release-assets/gtw-arch-${arch}.tar.gz" "$root"
 
 mkdir -p stage/usr/bin \
-  stage/usr/lib/systemd/user \
   stage/usr/share/man/man1 \
   stage/usr/share/bash-completion/completions \
   stage/usr/share/zsh/site-functions \
   stage/usr/share/fish/vendor_completions.d \
   stage/usr/share/elvish/lib \
   stage/usr/share/powershell/Modules \
-  stage/usr/share/applications \
-  stage/usr/share/icons/hicolor/scalable/apps \
-  stage/usr/share/licenses/gtm
-cp target/release/gtm stage/usr/bin/
-cp target/release/gtmd stage/usr/bin/
-cp dist/gtmd.service stage/usr/lib/systemd/user/
+  stage/usr/share/licenses/gtw
+cp target/release/gtw stage/usr/bin/
 cp artifacts/man/*.1 stage/usr/share/man/man1/
-cp artifacts/completions/gtm.bash stage/usr/share/bash-completion/completions/gtm
-cp artifacts/completions/gtmd.bash stage/usr/share/bash-completion/completions/gtmd
-cp artifacts/completions/_gtm stage/usr/share/zsh/site-functions/_gtm
-cp artifacts/completions/_gtmd stage/usr/share/zsh/site-functions/_gtmd
-cp artifacts/completions/gtm.fish stage/usr/share/fish/vendor_completions.d/
-cp artifacts/completions/gtmd.fish stage/usr/share/fish/vendor_completions.d/
-cp artifacts/completions/gtm.elv stage/usr/share/elvish/lib/
-cp artifacts/completions/gtmd.elv stage/usr/share/elvish/lib/
-cp artifacts/completions/gtm.ps1 stage/usr/share/powershell/Modules/
-cp artifacts/completions/gtmd.ps1 stage/usr/share/powershell/Modules/
-cp dist/gtm.desktop stage/usr/share/applications/
-cp assets/gtm.svg stage/usr/share/icons/hicolor/scalable/apps/
-cp LICENSE stage/usr/share/licenses/gtm/
+cp artifacts/completions/gtw.bash stage/usr/share/bash-completion/completions/gtw
+cp artifacts/completions/_gtw stage/usr/share/zsh/site-functions/_gtw
+cp artifacts/completions/gtw.fish stage/usr/share/fish/vendor_completions.d/
+cp artifacts/completions/gtw.elv stage/usr/share/elvish/lib/
+cp artifacts/completions/gtw.ps1 stage/usr/share/powershell/Modules/
+cp LICENSE stage/usr/share/licenses/gtw/
 
-bash /work/scripts/build/arch-pkg.sh "$version" "$arch" stage \
-  "release-assets/gtm-${version}-${arch}.pkg.tar.zst"
+bash "$repo/scripts/build/arch-pkg.sh" "$version" "$arch" stage \
+  "release-assets/gtw-${version}-${arch}.pkg.tar.zst"
 
-echo "arch build complete: $(ls -1 release-assets)"
+echo "arch build complete ($platform): $(ls -1 release-assets)"

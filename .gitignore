@@ -26,3 +26,13 @@ gtw.log
 *.db
 *.db-wal
 *.db-shm
+
+# Release/build staging (generated)
+/artifacts/
+/stage/
+/release-assets/
+/rpmbuild/
+*.pkg.tar.zst
+*.rpm
+*.apk
+*.deb

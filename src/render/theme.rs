@@ -31,10 +31,10 @@ struct ThemeDef {
     selection_bg: String,
     border: String,
     border_active: String,
-    volume_low: String,
-    volume_medium: String,
-    volume_high: String,
-    sidebar_active_border: String,
+    volume_low: Option<String>,
+    volume_medium: Option<String>,
+    volume_high: Option<String>,
+    sidebar_active_border: Option<String>,
     notification_border: Option<String>,
     monochromatic: Option<bool>,
 }
@@ -88,6 +88,26 @@ fn load_from_str(s: &str) -> Vec<ThemeEntry> {
                 .as_ref()
                 .map(|x| parse_color(x))
                 .unwrap_or_else(|| parse_color(&d.accent));
+            let volume_low = d
+                .volume_low
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.success));
+            let volume_medium = d
+                .volume_medium
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.warning));
+            let volume_high = d
+                .volume_high
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.error));
+            let sidebar_active_border = d
+                .sidebar_active_border
+                .as_ref()
+                .map(|x| parse_color(x))
+                .unwrap_or_else(|| parse_color(&d.border_active));
             ThemeEntry {
                 name: d.name,
                 light: d.light,
@@ -110,10 +130,10 @@ fn load_from_str(s: &str) -> Vec<ThemeEntry> {
                     selection_bg: parse_color(&d.selection_bg),
                     border: parse_color(&d.border),
                     border_active: parse_color(&d.border_active),
-                    volume_low: parse_color(&d.volume_low),
-                    volume_medium: parse_color(&d.volume_medium),
-                    volume_high: parse_color(&d.volume_high),
-                    sidebar_active_border: parse_color(&d.sidebar_active_border),
+                    volume_low,
+                    volume_medium,
+                    volume_high,
+                    sidebar_active_border,
                     notification_border,
                     monochromatic: d.monochromatic.unwrap_or(false),
                 },

@@ -25,11 +25,22 @@ jobs:
       - name: Install deps (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-      - name: no-ffmpeg grep
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@cargo-deny
+      - name: no-ffmpeg dependency gate
+        shell: bash
         run: |
-          set -e
-          ! grep -rn "ffmpeg\|libavcodec\|libavformat" . --include='*.rs' --include='Cargo.toml' --include='Cargo.lock' | grep -v '^\./specs/'
+          set -euo pipefail
+          if grep -nE '^name = "(ffmpeg|ffmpeg-[^"]*|libav[^"]*)"' Cargo.lock; then
+            echo "::error::FFmpeg is forbidden; use the pure-Rust zvidlib pipeline" >&2
+            exit 1
+          fi
+          if cargo tree --workspace --all-features | grep -Ei '(^| )((ffmpeg|libav)[a-z0-9_-]*) v'; then
+            echo "::error::FFmpeg is forbidden; use the pure-Rust zvidlib pipeline" >&2
+            exit 1
+          fi
       - run: cargo fmt --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
       - run: cargo test --workspace --no-fail-fast
+      - run: cargo deny check
       - run: cargo build --workspace --release

@@ -1,20 +1,11 @@
 pub mod effects;
+pub mod html;
+pub mod images;
+pub mod layout;
+pub mod math;
+pub mod syntax;
 pub mod theme;
-pub mod ui;
 pub mod wordmark;
 
 #[allow(unused_imports)]
 pub use effects::*;
-#[allow(unused_imports)]
-pub use theme::*;
-#[allow(unused_imports)]
-pub use ui::*;
-#[allow(unused_imports)]
-pub use wordmark::*;
-pub mod feed;
-pub mod html;
-
-#[allow(unused_imports)]
-pub use feed::*;
-#[allow(unused_imports)]
-pub use html::*;

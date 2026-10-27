@@ -1,5 +1,4 @@
 use thiserror::Error;
-#[allow(dead_code)]
 #[derive(Debug, Error)]
 #[allow(dead_code)]
 pub enum ApiError {

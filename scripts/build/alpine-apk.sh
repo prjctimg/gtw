@@ -6,7 +6,7 @@ arch="${2:?arch required}"
 stage="${3:?stage dir required}"
 out="${4:?output file required}"
 
-name="gtm"
+name="gtw"
 pkgver="${version}-r0"
 
 [ -d "$stage" ] || {
@@ -28,8 +28,8 @@ size="$(du -sk "$root" | cut -f1)"
 cat >"$root/.PKGINFO" <<EOF
 pkgname = $name
 pkgver = $pkgver
-pkgdesc = Terminal music player (TUI + CLI) and background daemon.
-url = https://gtmd.dev
+pkgdesc = Wikipedia in the terminal with cached reading, rich media, and offline lists.
+url = https://github.com/prjctimg/gtw
 builddate = $(date +%s)
 packager = prjctimg <prjctimg@outlook.com>
 size = $size

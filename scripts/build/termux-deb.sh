@@ -8,35 +8,31 @@ ARCH="aarch64"
 BIN_DIR="$REPO_ROOT/target/aarch64-linux-android/release"
 FILES_DIR="$REPO_ROOT/target/aarch64-linux-android/termux-pkg/files"
 
-for bin in gtmd gtm; do
-  if [ ! -f "$BIN_DIR/$bin" ]; then
-    echo "Error: $BIN_DIR/$bin not found."
-    echo "Run 'make termux' first."
-    exit 1
-  fi
-done
+if [ ! -f "$BIN_DIR/gtw" ]; then
+  echo "Error: $BIN_DIR/gtw not found."
+  echo "Run 'make termux' first."
+  exit 1
+fi
 
 rm -rf "$FILES_DIR"
 mkdir -p "$FILES_DIR/bin" "$FILES_DIR/share/man/man1"
 
-cp "$BIN_DIR/gtmd" "$FILES_DIR/bin/"
-cp "$BIN_DIR/gtm" "$FILES_DIR/bin/"
+cp "$BIN_DIR/gtw" "$FILES_DIR/bin/"
 
 if [ -d "$REPO_ROOT/artifacts/man" ]; then
-  cp "$REPO_ROOT"/artifacts/man/gtm.1 "$REPO_ROOT"/artifacts/man/gtmd.1 "$REPO_ROOT"/artifacts/man/gtmd-ipc.1 \
-    "$FILES_DIR/share/man/man1/" 2>/dev/null || true
+  cp "$REPO_ROOT"/artifacts/man/gtw.1 "$FILES_DIR/share/man/man1/" 2>/dev/null || true
 fi
 
 cd "$REPO_ROOT"
 termux-create-package \
   --pkg-version "$VERSION" \
   --pkg-arch "$ARCH" \
-  dist/termux/gtm.yml
+  dist/termux/gtw.yml
 
-DEB="gtm_${VERSION}_${ARCH}.deb"
+DEB="gtw_${VERSION}_${ARCH}.deb"
 if [ -f "$DEB" ]; then
-  mv "$DEB" "$(dirname "$DEB")/gtm-android-${VERSION}-${ARCH}.deb"
-  echo "Built: $REPO_ROOT/gtm-android-${VERSION}-${ARCH}.deb"
+  mv "$DEB" "$(dirname "$DEB")/gtw-android-${VERSION}-${ARCH}.deb"
+  echo "Built: $REPO_ROOT/gtw-android-${VERSION}-${ARCH}.deb"
 else
   echo "Built: $(ls "$REPO_ROOT"/*.deb 2>/dev/null | head -1)"
 fi

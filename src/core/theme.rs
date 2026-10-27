@@ -1,7 +1,6 @@
 use ratatui::style::Color;
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
 pub struct AppTheme {
     pub bg: Color,
     pub pane_bg: Color,

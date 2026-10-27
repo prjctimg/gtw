@@ -1,8 +1,11 @@
+use std::path::{Path, PathBuf};
+
 use serde::{Deserialize, Serialize};
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+
+use crate::cache::CACHE_TTL_DAYS;
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct Config {
     pub general: GeneralConfig,
     pub network: NetworkConfig,
@@ -11,95 +14,94 @@ pub struct Config {
     pub media: MediaConfig,
     pub effects: EffectsConfig,
     pub theme: ThemeConfig,
-    pub auth: AuthConfig,
-    pub editor: EditorConfig,
     pub keys: KeysConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct GeneralConfig {
-    #[serde(default)]
     pub offline: bool,
-    #[serde(default)]
     pub no_animations: bool,
+    pub language: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct NetworkConfig {
     pub user_agent: String,
     pub timeout_secs: u64,
+    pub retries: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct CacheConfig {
     pub max_size_mb: u64,
+    pub ttl_days: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct RenderConfig {
     pub syntax_highlight: bool,
+    pub image_width: u16,
+    pub wrap: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct MediaConfig {
     pub enabled: bool,
+    pub autoplay: bool,
+    pub max_megabytes: u64,
+    pub image_columns: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct EffectsConfig {
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
 pub struct ThemeConfig {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
-#[allow(dead_code)]
-pub struct AuthConfig {
-    pub use_keyring: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
-#[allow(dead_code)]
-pub struct EditorConfig {
-    pub autosave: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
-#[allow(dead_code)]
 pub struct KeysConfig {}
+
+impl Default for GeneralConfig {
+    fn default() -> Self {
+        Self {
+            offline: false,
+            no_animations: false,
+            language: "en".to_string(),
+        }
+    }
+}
 
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            user_agent: "gtw/0.1.0 (https://github.com/prjctimg/gtw)".to_string(),
+            user_agent: format!(
+                "gtw/{} (https://github.com/prjctimg/gtw; terminal reader)",
+                env!("CARGO_PKG_VERSION")
+            ),
             timeout_secs: 30,
+            retries: 2,
         }
     }
 }
 
 impl Default for CacheConfig {
     fn default() -> Self {
-        Self { max_size_mb: 512 }
+        Self {
+            max_size_mb: 512,
+            ttl_days: CACHE_TTL_DAYS,
+        }
     }
 }
 
@@ -107,13 +109,20 @@ impl Default for RenderConfig {
     fn default() -> Self {
         Self {
             syntax_highlight: true,
+            image_width: 72,
+            wrap: true,
         }
     }
 }
 
 impl Default for MediaConfig {
     fn default() -> Self {
-        Self { enabled: true }
+        Self {
+            enabled: true,
+            autoplay: false,
+            max_megabytes: 128,
+            image_columns: 48,
+        }
     }
 }
 
@@ -131,14 +140,53 @@ impl Default for ThemeConfig {
     }
 }
 
-impl Default for AuthConfig {
-    fn default() -> Self {
-        Self { use_keyring: true }
+impl Config {
+    pub fn path() -> PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("gtw")
+            .join("config.toml")
     }
-}
 
-impl Default for EditorConfig {
-    fn default() -> Self {
-        Self { autosave: true }
+    pub fn load(explicit: Option<&Path>) -> (Self, Option<PathBuf>) {
+        let path = explicit.map(Path::to_path_buf).unwrap_or_else(Self::path);
+        let cfg = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|s| toml::from_str::<Config>(&s).ok())
+            .unwrap_or_default();
+        (cfg, Some(path))
+    }
+
+    pub fn save(&self) -> std::io::Result<()> {
+        let path = Self::path();
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let body = toml::to_string_pretty(self)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        std::fs::write(path, body)
+    }
+
+    pub fn ttl_secs(&self) -> i64 {
+        i64::from(self.cache.ttl_days.max(1)) * 86_400
+    }
+
+    pub fn cache_dir() -> PathBuf {
+        dirs::cache_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("gtw")
+    }
+
+    pub fn media_dir() -> PathBuf {
+        Self::cache_dir().join("media")
+    }
+
+    pub fn sanitized_user_agent(&self) -> String {
+        let ua = self.network.user_agent.trim();
+        if ua.is_empty() {
+            NetworkConfig::default().user_agent
+        } else {
+            ua.replace(['\r', '\n'], " ")
+        }
     }
 }
